@@ -19,6 +19,10 @@
   --m8: #ffc7bc;
   --warn: #cf7a63;
   --paint: #f7d9e4;
+  /* обриси зім'ятого паперу: спершу пожмаканий аркуш, потім грудка */
+  --wad-1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' preserveAspectRatio='none'%3E%3Cpath d='M208.1,100.0L174.3,133.1L164.1,171.2L128.0,186.3L89.1,204.0L53.1,181.2L12.8,163.3L6.9,119.8L-0.9,78.5L18.4,40.7L57.4,26.2L90.1,6.0L131.8,2.3L153.4,40.7L181.5,63.7Z' fill='%23000'/%3E%3C/svg%3E");
+  --wad-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' preserveAspectRatio='none'%3E%3Cpath d='M186.5,100.0L196.0,133.0L173.3,157.0L148.8,174.7L119.3,176.2L91.7,200.6L56.3,199.6L31.1,174.8L18.6,144.1L2.6,116.3L-3.2,82.8L19.1,56.2L24.7,18.2L62.4,14.3L92.2,5.4L121.3,16.0L148.2,26.3L176.6,40.4L202.2,64.9Z' fill='%23000'/%3E%3C/svg%3E");
+
   /* фарба валика — той самий бузок, що під підписом «слова» */
   --roller-paint: #d7ccf3;
 
@@ -480,12 +484,83 @@ body::after {
   to { width: 100%; }
 }
 
-/* Час вийшов — аркуш жмакається покроково */
-.sheet[data-crumple] { transition: none; }
-.sheet[data-crumple='1'] { filter: url(#crumple-1); transform: scale(0.97) rotate(-0.7deg); }
-.sheet[data-crumple='2'] { filter: url(#crumple-2); transform: scale(0.9) rotate(1.3deg); }
-.sheet[data-crumple='3'] { filter: url(#crumple-3); transform: scale(0.77) rotate(-2.2deg); }
-.sheet[data-crumple='4'] { filter: url(#crumple-4); transform: scale(0.58) rotate(3.4deg); opacity: 0.85; }
+/* Час вийшов — аркуш мнуть двічі: спершу жмакають, потім стискають
+   у грудку. Форму дає маска з рваним контуром, а не заокруглення —
+   інакше виходило гладеньке коло, а не пожмаканий папір. */
+.sheet[data-crumple] {
+  position: relative;
+  transition: none;
+  border-radius: 0;
+}
+
+.sheet[data-crumple='1'] {
+  filter: url(#crumple-1);
+  transform: scale(0.74) rotate(-4deg);
+  -webkit-mask: var(--wad-1) no-repeat center / 100% 100%;
+  mask: var(--wad-1) no-repeat center / 100% 100%;
+}
+
+.sheet[data-crumple='2'] {
+  filter: url(#crumple-2);
+  transform: scale(0.34) rotate(13deg);
+  -webkit-mask: var(--wad-2) no-repeat center / 100% 100%;
+  mask: var(--wad-2) no-repeat center / 100% 100%;
+}
+
+/* заломи: не м'яка кулька, а грані пожмаканого паперу */
+.sheet[data-crumple]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(37deg, rgba(255, 255, 255, 0.55) 0 40%, rgba(126, 112, 158, 0.07) 40% 100%),
+    linear-gradient(-63deg, rgba(255, 255, 255, 0.5) 0 28%, rgba(126, 112, 158, 0.1) 28% 100%),
+    linear-gradient(118deg, rgba(104, 90, 138, 0.13) 0 22%, rgba(255, 255, 255, 0) 22% 64%, rgba(104, 90, 138, 0.16) 64% 100%);
+}
+
+@keyframes roll {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* Час вийшов — аркуш мнуть двічі: спершу гарно зім'яли,
+   потім скачали в кульку */
+.sheet[data-crumple] {
+  position: relative;
+  transition: none;
+}
+
+.sheet[data-crumple='1'] {
+  filter: url(#crumple-1);
+  transform: scale(0.72) rotate(-3.5deg);
+  border-radius: 32%;
+}
+
+.sheet[data-crumple='2'] {
+  filter: url(#crumple-2);
+  transform: scale(0.32) rotate(11deg);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* об'єм зім'ятої кульки */
+.sheet[data-crumple='2']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side at 36% 30%,
+    rgba(255, 255, 255, 0.72),
+    rgba(126, 112, 158, 0.26) 72%,
+    rgba(94, 80, 128, 0.46) 100%
+  );
+}
+
+@keyframes roll {
+  from { width: 0; }
+  to { width: 100%; }
+}
 
 /* ---------- панель слів ---------- */
 

@@ -490,8 +490,8 @@ function foundSecret(text, path) {
 const ROLL_BAND_MS = 520
 const ROLL_BAND_GAP_MS = 90
 const ROLL_FADE_MS = 300
-const CRUMPLE_STEPS = 4
-const CRUMPLE_STEP_MS = 170
+const CRUMPLE_STEPS = 2
+const CRUMPLE_STEP_MS = 420
 
 // Валик кладе горизонтальні смуги — то в один бік, то в інший. Висоту
 // кожної кидаємо наново, а наступна лягає з нахлистом на попередню, щоб
@@ -567,7 +567,7 @@ function crumpleSheet(done) {
       window.setTimeout(fold, CRUMPLE_STEP_MS)
       return
     }
-    window.setTimeout(done, CRUMPLE_STEP_MS + 120)
+    window.setTimeout(done, CRUMPLE_STEP_MS + 260)
   }
   fold()
 }
