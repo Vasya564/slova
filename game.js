@@ -1,11 +1,18 @@
-import { LEVELS, buildPuzzle, readPath, reverse } from './puzzle.js'
+import { LEVELS, buildPuzzle, label, readPath, reverse } from './puzzle.js'
 import { play, soundEnabled, toggleSound } from './sound.js'
 
 const MARKERS = ['--m1', '--m2', '--m3', '--m4', '--m5', '--m6', '--m7', '--m8']
-const SECRET_COLOR = 'var(--m4)'
 const ALL_WORDS = LEVELS.flatMap((level) => level.words)
 const COLOR = new Map(ALL_WORDS.map((word, i) => [word, `var(${MARKERS[i % MARKERS.length]})`]))
+const SECRET_COLOR = secretColor()
 const PROGRESS_KEY = 'slova:passed'
+
+// Кольори по колу, тож секрету віддаємо той, якого немає серед слів його рівня.
+function secretColor() {
+  const level = LEVELS.find((lvl) => lvl.secret)
+  const used = new Set(level ? level.words.map((word) => COLOR.get(word)) : [])
+  return MARKERS.map((marker) => `var(${marker})`).find((color) => !used.has(color))
+}
 
 const el = {
   intro: document.getElementById('intro'),
@@ -92,7 +99,7 @@ function renderWords() {
     ...level().words.map((word) => {
       const item = document.createElement('span')
       item.className = 'word'
-      item.textContent = word
+      item.textContent = label(word)
       item.style.setProperty('--c', COLOR.get(word))
       item.dataset.word = word
       if (state.found.has(word)) item.dataset.found = ''
@@ -290,7 +297,7 @@ function submit(path) {
   const item = el.words.querySelector(`[data-word="${match}"]`)
   if (item) item.dataset.found = ''
   el.tally.textContent = `${state.found.size} з ${level().words.length}`
-  el.announce.textContent = `Знайдено: ${match}`
+  el.announce.textContent = `Знайдено: ${label(match)}`
 
   if (state.found.size === level().words.length) {
     play('level')
@@ -427,7 +434,7 @@ function showFinale() {
   el.collected.replaceChildren(
     ...ALL_WORDS.map((word) => {
       const item = document.createElement('li')
-      item.textContent = word
+      item.textContent = label(word)
       item.style.background = COLOR.get(word)
       item.style.borderColor = 'transparent'
       return item
