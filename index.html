@@ -25,7 +25,7 @@
     <section class="screen cover" id="intro" data-active>
       <h1>дванадцять<br>слів</h1>
       <p>Вони сховались між літер. <span class="marked">Буквально.</span></p>
-      <p class="rules">Проведи по буквах — мишкою або пальцем. Слово лежить рівно: у рядку, у стовпчику або по діагоналі. З кожним рівнем сітка більша, а слова довші.</p>
+      <p class="rules">Проведи по буквах — мишкою або пальцем. Слово лежить рівно: у рядку, у стовпчику або по діагоналі. З кожним рівнем сітка більша, а слова довші. На кожне слово дається секунд двадцять — час на рівень видно під списком.</p>
       <button class="button" id="start">почати</button>
     </section>
 
@@ -41,6 +41,10 @@
         <aside class="panel">
           <h2 class="eyebrow">знайди</h2>
           <div class="words" id="words"></div>
+          <div class="clock-line" id="clock-line">
+            <span class="drain"><i id="drain"></i></span>
+            <span class="clock" id="clock"></span>
+          </div>
           <div class="hint-line">
             <span class="tally" id="tally"></span>
             <button class="button quiet" id="hint">підказка</button>
@@ -75,6 +79,16 @@
     <button class="button" id="next">далі</button>
   </div>
 </div>
+
+<svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- Рвані краї мазка: шум зміщує контур фігури, як щетина пензля -->
+    <filter id="brush" x="-20%" y="-60%" width="140%" height="220%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04 0.16" numOctaves="2" seed="9" result="bristles" />
+      <feDisplacementMap in="SourceGraphic" in2="bristles" scale="6" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+</svg>
 
 <span id="announce" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></span>
 

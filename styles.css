@@ -17,6 +17,7 @@
   --m6: #d7ccf3;
   --m7: #d5e6b6;
   --m8: #ffc7bc;
+  --warn: #cf7a63;
 
   --display: 'Unbounded', 'Trebuchet MS', sans-serif;
   --body: 'Manrope', -apple-system, 'Segoe UI', sans-serif;
@@ -316,7 +317,7 @@ body::after {
   mix-blend-mode: multiply;
 }
 
-.marks line { stroke-linecap: round; }
+.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 /* ---------- панель слів ---------- */
 
@@ -351,6 +352,42 @@ body::after {
 }
 
 .word[data-found] { color: var(--ink); background-size: 100% 0.62em; }
+
+.clock-line { display: flex; align-items: center; gap: 12px; }
+
+.drain {
+  flex: 1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--rule);
+  overflow: hidden;
+}
+
+.drain i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--ink-soft);
+  transform-origin: left;
+  transition: background 0.4s ease;
+}
+
+@keyframes drain {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+.clock {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.4s ease;
+}
+
+.clock-line[data-low] .drain i { background: var(--warn); }
+.clock-line[data-low] .clock { color: var(--warn); }
 
 .hint-line {
   display: flex;

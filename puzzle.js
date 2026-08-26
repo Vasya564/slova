@@ -53,6 +53,12 @@ export function label(word) {
   return LABELS[word] ?? word
 }
 
+// На кожне слово — від 20 до 25 секунд, залежно від довжини.
+// Секретне слово часу не додає: його ніхто не зобов'язаний шукати.
+export function levelSeconds(level) {
+  return level.words.reduce((total, word) => total + Math.min(25, 20 + Math.max(0, word.length - 5)), 0)
+}
+
 const ALPHABET = [...'абвгдеєжзиійклмнопрстуфхцчшщьюя']
 
 const PLACEMENT_ATTEMPTS = 400

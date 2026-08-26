@@ -1,4 +1,4 @@
-import { LEVELS, buildPuzzle, label, readPath, reverse } from './puzzle.js'
+import { LEVELS, buildPuzzle, label, levelSeconds, readPath, reverse } from './puzzle.js'
 import { play } from './sound.js'
 
 const MARKERS = ['--m1', '--m2', '--m3', '--m4', '--m5', '--m6', '--m7', '--m8']
@@ -27,6 +27,9 @@ const el = {
   tally: document.getElementById('tally'),
   note: document.getElementById('note'),
   hint: document.getElementById('hint'),
+  clockLine: document.getElementById('clock-line'),
+  drain: document.getElementById('drain'),
+  clock: document.getElementById('clock'),
   card: document.getElementById('card'),
   cardTitle: document.getElementById('card-title'),
   cardText: document.getElementById('card-text'),
@@ -53,6 +56,9 @@ const state = {
   hint: null,
   hintTimer: 0,
   afterCard: null,
+  deadline: 0,
+  remaining: 0,
+  ticker: 0,
 }
 
 const level = () => LEVELS[state.levelIndex]
@@ -146,48 +152,132 @@ function centerOf({ r, c }) {
   }
 }
 
-function stroke(cells, color, width, opacity) {
+const SVG_NS = 'http://www.w3.org/2000/svg'
+const BRUSH_SEGMENT = 9
+
+function svg(tag) {
+  return document.createElementNS(SVG_NS, tag)
+}
+
+// Той самий мазок при кожному перемальовуванні: зерно рахуємо з координат слова.
+function seedOf(cells) {
+  const first = cells[0]
+  const last = cells[cells.length - 1]
+  return (first.r * 31 + first.c) * 977 + last.r * 31 + last.c + cells.length
+}
+
+function noise(seed) {
+  let value = seed >>> 0
+  return () => {
+    value = (value + 0x6d2b79f5) >>> 0
+    let t = Math.imul(value ^ (value >>> 15), 1 | value)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+// Ширина мазка вздовж штриха: різко лягає, довго сходить нанівець,
+// плюс дрібні коливання — ніби змінюється натиск руки.
+function pressure(t) {
+  const lands = Math.min(1, t / 0.05)
+  const lifts = Math.min(1, (1 - t) / 0.12)
+  return Math.sqrt(Math.min(lands, lifts)) * (0.88 + 0.12 * Math.sin(t * 8.5 + 1.1))
+}
+
+function brushShape(length, half, seed) {
+  const steps = Math.min(44, Math.max(10, Math.round(length / BRUSH_SEGMENT)))
+  const random = noise(seed)
+  const upper = []
+  const lower = []
+
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    const x = (t * length).toFixed(1)
+    const width = half * pressure(t)
+    upper.push(`${x},${(-width + (random() - 0.5) * half * 0.3).toFixed(1)}`)
+    lower.push(`${x},${(width + (random() - 0.5) * half * 0.3).toFixed(1)}`)
+  }
+
+  return `M${upper.join('L')}L${lower.reverse().join('L')}Z`
+}
+
+// Мазок від центру першої літери до центру останньої, з невеликим виходом за них.
+function brush(cells, color, half, opacity) {
   const a = centerOf(cells[0])
   const b = centerOf(cells[cells.length - 1])
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-  line.setAttribute('x1', a.x)
-  line.setAttribute('y1', a.y)
-  line.setAttribute('x2', b.x)
-  line.setAttribute('y2', b.y)
-  line.setAttribute('stroke', color)
-  line.setAttribute('stroke-width', width)
-  line.setAttribute('opacity', opacity)
-  return { line, length: Math.hypot(b.x - a.x, b.y - a.y) }
+  const span = Math.hypot(b.x - a.x, b.y - a.y)
+  const ux = span ? (b.x - a.x) / span : 1
+  const uy = span ? (b.y - a.y) / span : 0
+  const pad = half * 0.95
+  const length = span + pad * 2
+  const angle = (Math.atan2(uy, ux) * 180) / Math.PI
+
+  const group = svg('g')
+  group.setAttribute('transform', `translate(${a.x - ux * pad} ${a.y - uy * pad}) rotate(${angle})`)
+
+  const shape = svg('path')
+  shape.setAttribute('d', brushShape(length, half, seedOf(cells)))
+  shape.setAttribute('fill', color)
+  shape.setAttribute('opacity', opacity)
+  shape.setAttribute('filter', 'url(#brush)')
+  group.append(shape)
+
+  return { group, length, half }
+}
+
+// Мазок «наноситься» зліва направо: прямокутник відсікання росте вздовж штриха.
+function paintOn(mark, id) {
+  const clip = svg('clipPath')
+  clip.setAttribute('id', id)
+  clip.setAttribute('clipPathUnits', 'userSpaceOnUse')
+
+  const window_ = svg('rect')
+  window_.setAttribute('x', -mark.half * 2)
+  window_.setAttribute('y', -mark.half * 2)
+  window_.setAttribute('height', mark.half * 4)
+  window_.setAttribute('width', 0)
+  clip.append(window_)
+
+  const shape = mark.group.firstChild
+  const inner = svg('g')
+  inner.setAttribute('clip-path', `url(#${id})`)
+  inner.append(shape)
+  mark.group.append(clip, inner)
+
+  return () => {
+    // Синхронний замір змушує браузер зафіксувати нульову ширину — без нього
+    // переходу не буде. requestAnimationFrame тут не годиться: у фоновій
+    // вкладці він мовчить.
+    void window_.getBoundingClientRect()
+    window_.style.transition = 'width 0.55s cubic-bezier(0.3, 0.8, 0.4, 1)'
+    window_.setAttribute('width', mark.length + mark.half * 4)
+  }
 }
 
 function drawMarks() {
-  const width = el.grid.clientWidth / state.puzzle.size
+  const cell = el.grid.clientWidth / state.puzzle.size
+  const half = cell * 0.43
   const marks = []
+  const starts = []
 
   for (const [word, cells] of state.found) {
-    const { line, length } = stroke(cells, COLOR.get(word), width * 0.78, 0.95)
-    // штрих «замальовується» від першої літери до останньої
+    const mark = brush(cells, COLOR.get(word), half, 0.95)
     if (!state.drawn.has(word)) {
       state.drawn.add(word)
-      line.style.strokeDasharray = `${length}`
-      line.style.strokeDashoffset = `${length}`
-      requestAnimationFrame(() => {
-        line.style.transition = 'stroke-dashoffset 0.5s cubic-bezier(0.2, 0.7, 0.3, 1)'
-        line.style.strokeDashoffset = '0'
-      })
+      starts.push(paintOn(mark, `paint-${state.drawn.size}`))
     }
-    marks.push(line)
+    marks.push(mark.group)
   }
 
-  if (state.secret) {
-    marks.push(stroke(state.secret, SECRET_COLOR, width * 0.78, 0.95).line)
-  }
+  if (state.secret) marks.push(brush(state.secret, SECRET_COLOR, half, 0.95).group)
 
+  // Мазок під пальцем — той самий пензель, лише блідий
   if (state.selection) {
-    marks.push(stroke(state.selection, 'rgba(122, 116, 158, 0.28)', width * 0.72, 1).line)
+    marks.push(brush(state.selection, 'rgba(120, 114, 156, 0.3)', half * 0.94, 1).group)
   }
 
   el.marks.replaceChildren(...marks)
+  for (const start of starts) start()
 }
 
 /* ---------- виділення ---------- */
@@ -318,6 +408,63 @@ function foundSecret(text, path) {
   return true
 }
 
+/* ---------- час ---------- */
+
+const LOW_TIME_MS = 10_000
+
+function clockText(ms) {
+  const seconds = Math.ceil(ms / 1000)
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+function startTimer(seconds) {
+  stopTimer()
+  state.remaining = seconds * 1000
+  state.deadline = Date.now() + state.remaining
+  // Смужка тане силами CSS, а от рішення «час вийшов» ухвалює годинник:
+  // у фоновій вкладці таймери притишуються, а Date.now() — ні.
+  el.drain.style.animation = 'none'
+  void el.drain.offsetWidth
+  el.drain.style.animation = `drain ${seconds}s linear forwards`
+  el.drain.style.animationPlayState = 'running'
+  tick()
+  state.ticker = window.setInterval(tick, 250)
+}
+
+function tick() {
+  const left = Math.max(0, state.deadline - Date.now())
+  el.clock.textContent = clockText(left)
+  el.clockLine.toggleAttribute('data-low', left > 0 && left <= LOW_TIME_MS)
+  if (!left) timeUp()
+}
+
+function stopTimer() {
+  window.clearInterval(state.ticker)
+  state.ticker = 0
+}
+
+function pauseTimer() {
+  if (!state.ticker) return
+  state.remaining = Math.max(0, state.deadline - Date.now())
+  stopTimer()
+  el.drain.style.animationPlayState = 'paused'
+}
+
+function resumeTimer() {
+  if (state.ticker || !state.remaining || document.hidden) return
+  state.deadline = Date.now() + state.remaining
+  el.drain.style.animationPlayState = 'running'
+  state.ticker = window.setInterval(tick, 250)
+}
+
+function timeUp() {
+  stopTimer()
+  state.remaining = 0
+  el.clockLine.removeAttribute('data-low')
+  play('miss')
+  openCard(TIME_UP_CARD)
+}
+
 /* ---------- картки-репліки ---------- */
 
 // Підказка не підказує, поки її не випросиш тричі.
@@ -340,6 +487,13 @@ const HINT_CARDS = [
   },
 ]
 
+const TIME_UP_CARD = {
+  title: '<span class="marked">час вийшов</span>',
+  text: 'сітка буде нова — спробуй ще раз',
+  button: 'ще раз',
+  after: () => startLevel(state.levelIndex),
+}
+
 const SECRET_CARD = {
   title: '<span class="marked">хехе</span>',
   text: 'цього слова навіть у списку не було',
@@ -347,6 +501,7 @@ const SECRET_CARD = {
 }
 
 function openCard(card) {
+  pauseTimer()
   el.cardTitle.innerHTML = card.title
   el.cardText.textContent = card.text
   el.cardClose.textContent = card.button
@@ -359,6 +514,7 @@ function closeCard() {
   el.card.removeAttribute('data-active')
   const after = state.afterCard
   state.afterCard = null
+  resumeTimer()
   if (after) after()
 }
 
@@ -405,6 +561,7 @@ function startLevel(index) {
   state.hintPresses = 0
   clearHint()
 
+  startTimer(levelSeconds(level()))
   el.note.textContent = level().note
   renderPips()
   renderWords()
@@ -418,6 +575,7 @@ function startLevel(index) {
 }
 
 function finishLevel() {
+  stopTimer()
   rememberPassed(Math.max(passedLevels(), state.levelIndex + 1))
   const isLast = state.levelIndex === LEVELS.length - 1
   if (isLast) {
@@ -452,6 +610,12 @@ el.grid.addEventListener('pointercancel', () => {
   state.dragging = false
   state.selection = null
   drawMarks()
+})
+
+// Перемкнулась на інший застосунок — час зачекає.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pauseTimer()
+  else if (!el.card.hasAttribute('data-active')) resumeTimer()
 })
 
 el.hint.addEventListener('click', askHint)
