@@ -32,6 +32,8 @@ export const LEVELS = [
     id: 3,
     size: 13,
     words: ['наждачка', 'услишала', 'буквально'],
+    // Секретне слово лежить у сітці, але не в списку — його треба намацати самій.
+    secret: 'хехе',
     dirs: ['E', 'S', 'SE', 'NE'],
     note: 'додались діагоналі',
   },
@@ -95,7 +97,8 @@ function fillBlanks(grid, words) {
 }
 
 export function buildPuzzle(level) {
-  const byLengthDesc = [...level.words].sort((a, b) => b.length - a.length)
+  const all = level.secret ? [...level.words, level.secret] : [...level.words]
+  const byLengthDesc = [...all].sort((a, b) => b.length - a.length)
 
   for (let round = 0; round < GRID_ATTEMPTS; round++) {
     const grid = Array.from({ length: level.size }, () => Array(level.size).fill(''))
@@ -108,11 +111,11 @@ export function buildPuzzle(level) {
         placedAll = false
         break
       }
-      placements.push({ word, cells })
+      placements.push({ word, cells, secret: word === level.secret })
     }
 
     if (!placedAll) continue
-    fillBlanks(grid, level.words)
+    fillBlanks(grid, all)
     return { size: level.size, grid, placements }
   }
 

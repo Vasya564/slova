@@ -43,7 +43,10 @@
           <div class="words" id="words"></div>
           <div class="hint-line">
             <span class="tally" id="tally"></span>
-            <button class="button quiet" id="hint">підказка</button>
+            <span class="controls">
+              <button class="button quiet sound" id="sound" aria-pressed="true">звук</button>
+              <button class="button quiet" id="hint">підказка</button>
+            </span>
           </div>
           <p class="note" id="note"></p>
         </aside>
@@ -60,11 +63,11 @@
   </main>
 </div>
 
-<div class="curtain" id="praise">
+<div class="curtain" id="card">
   <div class="curtain-card">
-    <h2>ти у мене дуже <span class="marked">розумна</span></h2>
-    <p>тому тобі підказки не потрібні</p>
-    <button class="button" id="praise-close">ну добре</button>
+    <h2 id="card-title"></h2>
+    <p id="card-text"></p>
+    <button class="button" id="card-close"></button>
   </div>
 </div>
 

@@ -286,6 +286,27 @@ body::after {
 
 .cell[data-anchor] { transform: scale(1.18); font-weight: 700; }
 
+/* Третя підказка все ж показує першу літеру: клітинка двічі спалахує кольором слова */
+.cell[data-hint] {
+  font-weight: 700;
+  animation: hint 1.05s ease-in-out 2;
+}
+
+@keyframes hint {
+  0%, 100% { background: var(--paper); }
+  40% { background: var(--hint); }
+}
+
+/* Невдале виділення — сітка коротко здригається */
+.grid-wrap[data-miss] { animation: nudge 0.3s ease-in-out; }
+
+@keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+
 .marks {
   position: absolute;
   inset: 0;
@@ -343,6 +364,9 @@ body::after {
 
 .tally { font-size: 13px; color: var(--ink-soft); }
 
+.controls { display: flex; align-items: center; gap: 16px; }
+.sound[data-off] { text-decoration: line-through; opacity: 0.5; }
+
 .note { font-size: 13px; line-height: 1.5; color: var(--ink-soft); margin: 0; }
 
 /* ---------- «рівень пройдено» ---------- */
@@ -380,9 +404,9 @@ body::after {
 
 .curtain-card p { color: var(--ink-soft); margin: 0; font-size: 15px; line-height: 1.55; }
 
-/* Похвала замість підказки: ширша картка, щоб фраза лягла у два рядки */
-#praise .curtain-card { max-width: 440px; }
-#praise .curtain-card h2 { font-size: clamp(24px, 5.4vw, 33px); }
+/* Картка-репліка: ширша, щоб фраза лягла у два рядки */
+#card .curtain-card { max-width: 440px; }
+#card .curtain-card h2 { font-size: clamp(24px, 5.4vw, 33px); }
 
 @media (max-width: 760px) {
   .stage { justify-content: flex-start; }
@@ -398,4 +422,7 @@ body::after {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* Анімації вимкнені системно — підказка тоді просто світиться ті самі 2.2 с */
+  .cell[data-hint] { background: var(--hint); }
 }

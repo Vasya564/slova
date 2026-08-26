@@ -1,6 +1,8 @@
 import { LEVELS, buildPuzzle, readPath, reverse } from './puzzle.js'
+import { play, soundEnabled, toggleSound } from './sound.js'
 
 const MARKERS = ['--m1', '--m2', '--m3', '--m4', '--m5', '--m6', '--m7', '--m8']
+const SECRET_COLOR = 'var(--m4)'
 const ALL_WORDS = LEVELS.flatMap((level) => level.words)
 const COLOR = new Map(ALL_WORDS.map((word, i) => [word, `var(${MARKERS[i % MARKERS.length]})`]))
 const PROGRESS_KEY = 'slova:passed'
@@ -12,13 +14,17 @@ const el = {
   levels: document.getElementById('levels'),
   sheet: document.getElementById('sheet'),
   grid: document.getElementById('grid'),
+  gridWrap: document.querySelector('.grid-wrap'),
   marks: document.getElementById('marks'),
   words: document.getElementById('words'),
   tally: document.getElementById('tally'),
   note: document.getElementById('note'),
   hint: document.getElementById('hint'),
-  praise: document.getElementById('praise'),
-  praiseClose: document.getElementById('praise-close'),
+  sound: document.getElementById('sound'),
+  card: document.getElementById('card'),
+  cardTitle: document.getElementById('card-title'),
+  cardText: document.getElementById('card-text'),
+  cardClose: document.getElementById('card-close'),
   curtain: document.getElementById('curtain'),
   curtainTitle: document.getElementById('curtain-title'),
   curtainNote: document.getElementById('curtain-note'),
@@ -36,6 +42,11 @@ const state = {
   selection: null,
   anchor: null,
   dragging: false,
+  secret: null,
+  hintPresses: 0,
+  hint: null,
+  hintTimer: 0,
+  afterCard: null,
 }
 
 const level = () => LEVELS[state.levelIndex]
@@ -162,10 +173,13 @@ function drawMarks() {
     marks.push(line)
   }
 
+  if (state.secret) {
+    marks.push(stroke(state.secret, SECRET_COLOR, width * 0.78, 0.95).line)
+  }
+
   if (state.selection) {
     marks.push(stroke(state.selection, 'rgba(122, 116, 158, 0.28)', width * 0.72, 1).line)
   }
-
 
   el.marks.replaceChildren(...marks)
 }
@@ -252,8 +266,16 @@ function endSelection(event) {
   }
 
   clearAnchor()
-  submit(path)
+  if (!submit(path) && path.length > 1) miss()
   drawMarks()
+}
+
+function miss() {
+  play('miss')
+  el.gridWrap.removeAttribute('data-miss')
+  void el.gridWrap.offsetWidth
+  el.gridWrap.setAttribute('data-miss', '')
+  window.setTimeout(() => el.gridWrap.removeAttribute('data-miss'), 320)
 }
 
 function submit(path) {
@@ -261,8 +283,9 @@ function submit(path) {
   const match = level().words.find(
     (word) => !state.found.has(word) && (word === text || word === reverse(text))
   )
-  if (!match) return
+  if (!match) return foundSecret(text, path)
 
+  play('found')
   state.found.set(match, path)
   const item = el.words.querySelector(`[data-word="${match}"]`)
   if (item) item.dataset.found = ''
@@ -270,14 +293,96 @@ function submit(path) {
   el.announce.textContent = `Знайдено: ${match}`
 
   if (state.found.size === level().words.length) {
+    play('level')
     window.setTimeout(finishLevel, 850)
   }
+  return true
 }
 
-/* ---------- похвала замість підказки ---------- */
+// Слова, якого немає в списку, ніхто не шукає — тому за нього окрема реакція.
+function foundSecret(text, path) {
+  const secret = level().secret
+  if (state.secret || !secret) return false
+  if (text !== secret && reverse(text) !== secret) return false
 
-function closePraise() {
-  el.praise.removeAttribute('data-active')
+  state.secret = path
+  play('secret')
+  el.announce.textContent = `Знайдено сховане слово: ${secret}`
+  window.setTimeout(() => openCard(SECRET_CARD), 450)
+  return true
+}
+
+/* ---------- картки-репліки ---------- */
+
+// Підказка не підказує, поки її не випросиш тричі.
+const HINT_CARDS = [
+  {
+    title: 'ти у мене дуже <span class="marked">розумна</span>',
+    text: 'тому тобі підказки не потрібні',
+    button: 'ну добре',
+  },
+  {
+    title: 'ну <span class="marked">подивись</span> ще раз',
+    text: 'воно прямо перед тобою, чесно',
+    button: 'дивлюсь',
+  },
+  {
+    title: '<span class="marked">здаюсь</span>',
+    text: 'ось перша літера — далі сама',
+    button: 'дякую',
+    after: revealFirstLetter,
+  },
+]
+
+const SECRET_CARD = {
+  title: '<span class="marked">хехе</span>',
+  text: 'цього слова навіть у списку не було',
+  button: 'хехе',
+}
+
+function openCard(card) {
+  el.cardTitle.innerHTML = card.title
+  el.cardText.textContent = card.text
+  el.cardClose.textContent = card.button
+  state.afterCard = card.after ?? null
+  el.card.setAttribute('data-active', '')
+}
+
+function closeCard() {
+  if (!el.card.hasAttribute('data-active')) return
+  el.card.removeAttribute('data-active')
+  const after = state.afterCard
+  state.afterCard = null
+  if (after) after()
+}
+
+function askHint() {
+  const card = HINT_CARDS[Math.min(state.hintPresses, HINT_CARDS.length - 1)]
+  state.hintPresses += 1
+  openCard(card)
+}
+
+function revealFirstLetter() {
+  const hidden = state.puzzle.placements.filter(
+    (spot) => !spot.secret && !state.found.has(spot.word)
+  )
+  if (!hidden.length) return
+
+  clearHint()
+  const spot = hidden[Math.floor(Math.random() * hidden.length)]
+  const first = spot.cells[0]
+  const cell = state.cells[first.r][first.c]
+  cell.style.setProperty('--hint', COLOR.get(spot.word))
+  cell.dataset.hint = ''
+  state.hint = cell
+  state.hintTimer = window.setTimeout(clearHint, 2200)
+}
+
+function clearHint() {
+  window.clearTimeout(state.hintTimer)
+  if (!state.hint) return
+  state.hint.removeAttribute('data-hint')
+  state.hint = null
 }
 
 /* ---------- перебіг рівнів ---------- */
@@ -290,6 +395,9 @@ function startLevel(index) {
   state.selection = null
   state.anchor = null
   state.dragging = false
+  state.secret = null
+  state.hintPresses = 0
+  clearHint()
 
   el.note.textContent = level().note
   renderPips()
@@ -340,14 +448,21 @@ el.grid.addEventListener('pointercancel', () => {
   drawMarks()
 })
 
-el.hint.addEventListener('click', () => el.praise.setAttribute('data-active', ''))
-el.praiseClose.addEventListener('click', closePraise)
-el.praise.addEventListener('click', (event) => {
-  if (event.target === el.praise) closePraise()
+el.hint.addEventListener('click', askHint)
+el.cardClose.addEventListener('click', closeCard)
+el.card.addEventListener('click', (event) => {
+  if (event.target === el.card) closeCard()
 })
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closePraise()
+  if (event.key === 'Escape') closeCard()
 })
+
+el.sound.addEventListener('click', () => renderSound(toggleSound()))
+
+function renderSound(on) {
+  el.sound.toggleAttribute('data-off', !on)
+  el.sound.setAttribute('aria-pressed', String(on))
+}
 
 el.next.addEventListener('click', () => {
   el.curtain.removeAttribute('data-active')
@@ -369,6 +484,8 @@ window.addEventListener('resize', () => {
   syncCellSize()
   drawMarks()
 })
+
+renderSound(soundEnabled())
 
 const passed = passedLevels()
 renderPips(passed, passed < LEVELS.length ? passed : -1)
