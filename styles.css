@@ -395,9 +395,9 @@ body::after {
   position: absolute;
   left: 0;
   width: 0;
-  background:
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.16) 0 2px, rgba(255, 255, 255, 0) 2px 9px),
-    linear-gradient(180deg, #cfc3f0 0%, #e4dcf8 45%, #d3c8f2 100%);
+  /* колір і розмір кожної смуги задає game.js */
+  background-color: var(--band);
+  background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.2) 0 2px, rgba(255, 255, 255, 0) 2px 9px);
   animation-name: roll;
   animation-timing-function: cubic-bezier(0.35, 0.1, 0.4, 1);
   animation-fill-mode: forwards;

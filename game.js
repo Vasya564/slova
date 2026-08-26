@@ -486,38 +486,46 @@ function foundSecret(text, path) {
 
 /* ---------- переходи ---------- */
 
-const ROLL_BANDS = 5
-const ROLL_BAND_MS = 360
-const ROLL_STAGGER = 105
-const ROLL_COVER_MS = ROLL_STAGGER * (ROLL_BANDS - 1) + ROLL_BAND_MS + 120
+const ROLL_BAND_MS = 340
+const ROLL_STAGGER = 100
 const ROLL_FADE_MS = 260
 const CRUMPLE_STEPS = 4
 const CRUMPLE_STEP_MS = 170
 
-// Валик кладе горизонтальні смуги — то в один бік, то в інший, різної
-// висоти й довжини. Коли екран накрито, під фарбою міняємо екран.
-function paintBand(index) {
-  const band = document.createElement('i')
-  const height = 100 / ROLL_BANDS + 7 + Math.random() * 5
-  const top = (index / ROLL_BANDS) * 100 - 3 + Math.random() * 4
+// Валик кладе горизонтальні смуги — то в один бік, то в інший. Висоту
+// кожної кидаємо наново, а наступна лягає з нахлистом на попередню, щоб
+// екран усе одно був накритий повністю.
+function paintBands() {
+  const bands = []
+  let edge = -5
 
-  band.style.top = `${top}%`
-  band.style.height = `${height}%`
-  band.style.animationDelay = `${index * ROLL_STAGGER + Math.random() * 70}ms`
-  band.style.animationDuration = `${ROLL_BAND_MS + Math.random() * 120}ms`
-  if (index % 2) band.dataset.back = ''
-  return band
+  while (edge < 100) {
+    const height = 11 + Math.random() * 25
+    const band = document.createElement('i')
+    band.style.top = `${edge}%`
+    band.style.height = `${height + 7}%`
+    band.style.setProperty('--band', `hsl(152 34% ${86 + Math.random() * 6}%)`)
+    band.style.animationDelay = `${bands.length * ROLL_STAGGER + Math.random() * 70}ms`
+    band.style.animationDuration = `${ROLL_BAND_MS + Math.random() * 140}ms`
+    if (bands.length % 2) band.dataset.back = ''
+    bands.push(band)
+    edge += height
+  }
+
+  return bands
 }
 
 function rollOver(swap) {
-  el.roller.replaceChildren(...Array.from({ length: ROLL_BANDS }, (_, i) => paintBand(i)))
+  const bands = paintBands()
+  const cover = (bands.length - 1) * ROLL_STAGGER + ROLL_BAND_MS + 210
+  el.roller.replaceChildren(...bands)
   el.roller.removeAttribute('data-done')
   el.roller.setAttribute('data-active', '')
   paintRoll()
 
-  window.setTimeout(swap, ROLL_COVER_MS)
-  window.setTimeout(() => el.roller.setAttribute('data-done', ''), ROLL_COVER_MS + 60)
-  window.setTimeout(() => el.roller.removeAttribute('data-active'), ROLL_COVER_MS + 60 + ROLL_FADE_MS)
+  window.setTimeout(swap, cover)
+  window.setTimeout(() => el.roller.setAttribute('data-done', ''), cover + 60)
+  window.setTimeout(() => el.roller.removeAttribute('data-active'), cover + 60 + ROLL_FADE_MS)
 }
 
 // Аркуш жмакається не плавно, а ривками — на кожен крок свій злам і свій хрускіт.

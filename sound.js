@@ -27,7 +27,7 @@ function note(frequency, delay, duration, peak, type = 'triangle') {
 
 // Записані звуки: валик і помилка. Кожен вантажимо раз і тримаємо
 // розкодованим; якщо файлу немає — лишається синтез.
-const SAMPLES = { error: 'error.m4a', roller: 'roller.m4a' }
+const SAMPLES = { error: 'error.m4a', roller: 'roller.m4a', splat: 'splat.m4a' }
 
 const decoded = new Map()
 const loading = new Map()
@@ -124,6 +124,7 @@ function noiseBuffer(ctx) {
 export function primeSounds() {
   sample('error')
   sample('roller')
+  sample('splat')
 }
 
 export function paintStart() {
@@ -199,8 +200,17 @@ function rollSynth(seconds) {
   }
 }
 
-// Ляпка: короткий вологий удар — низький глухий тон плюс сплеск шуму.
-export function splash() {
+// Ляпка: записаний звук, якщо є файл, інакше вологий удар власного розливу.
+export async function splash() {
+  const buffer = await sample('splat')
+  if (buffer) {
+    playSample(buffer, 0.9)
+    return
+  }
+  splashSynth()
+}
+
+function splashSynth() {
   try {
     const ctx = audio()
     const now = ctx.currentTime
@@ -209,23 +219,23 @@ export function splash() {
     source.buffer = noiseBuffer(ctx)
     const filter = ctx.createBiquadFilter()
     filter.type = 'lowpass'
-    filter.frequency.setValueAtTime(2600, now)
-    filter.frequency.exponentialRampToValueAtTime(420, now + 0.18)
+    filter.frequency.setValueAtTime(3400, now)
+    filter.frequency.exponentialRampToValueAtTime(380, now + 0.22)
     const wet = ctx.createGain()
     wet.gain.setValueAtTime(0.0001, now)
-    wet.gain.exponentialRampToValueAtTime(0.11, now + 0.008)
-    wet.gain.exponentialRampToValueAtTime(0.0001, now + 0.22)
+    wet.gain.exponentialRampToValueAtTime(0.2, now + 0.006)
+    wet.gain.exponentialRampToValueAtTime(0.0001, now + 0.3)
     source.connect(filter).connect(wet).connect(ctx.destination)
     source.start(now, Math.random())
     source.stop(now + 0.26)
 
     const thud = ctx.createOscillator()
     const body = ctx.createGain()
-    thud.frequency.setValueAtTime(180, now)
-    thud.frequency.exponentialRampToValueAtTime(58, now + 0.16)
+    thud.frequency.setValueAtTime(210, now)
+    thud.frequency.exponentialRampToValueAtTime(52, now + 0.18)
     body.gain.setValueAtTime(0.0001, now)
-    body.gain.exponentialRampToValueAtTime(0.08, now + 0.01)
-    body.gain.exponentialRampToValueAtTime(0.0001, now + 0.24)
+    body.gain.exponentialRampToValueAtTime(0.16, now + 0.008)
+    body.gain.exponentialRampToValueAtTime(0.0001, now + 0.32)
     thud.connect(body).connect(ctx.destination)
     thud.start(now)
     thud.stop(now + 0.28)
