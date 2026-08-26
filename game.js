@@ -504,7 +504,7 @@ function paintBands() {
     const band = document.createElement('i')
     band.style.top = `${edge}%`
     band.style.height = `${height + 7}%`
-    band.style.setProperty('--band', `hsl(152 34% ${86 + Math.random() * 6}%)`)
+    band.style.setProperty('--band', `hsl(340 60% ${88 + Math.random() * 6}%)`)
     band.style.animationDelay = `${bands.length * ROLL_STAGGER + Math.random() * 70}ms`
     band.style.animationDuration = `${ROLL_BAND_MS + Math.random() * 140}ms`
     if (bands.length % 2) band.dataset.back = ''
