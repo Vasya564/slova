@@ -1,31 +1,6 @@
 // Тихі звуки гри. Контекст створюємо ліниво — лише після першого дотику до сітки.
 
-const STORE_KEY = 'slova:sound'
-
 let context = null
-let enabled = readPreference()
-
-function readPreference() {
-  try {
-    return localStorage.getItem(STORE_KEY) !== 'off'
-  } catch {
-    return true
-  }
-}
-
-export function soundEnabled() {
-  return enabled
-}
-
-export function toggleSound() {
-  enabled = !enabled
-  try {
-    localStorage.setItem(STORE_KEY, enabled ? 'on' : 'off')
-  } catch {
-    // приватний режим — вибір просто не переживе перезавантаження
-  }
-  return enabled
-}
 
 function audio() {
   if (!context) context = new AudioContext()
@@ -58,7 +33,6 @@ const TUNES = {
 }
 
 export function play(tune) {
-  if (!enabled) return
   try {
     for (const [frequency, delay, duration, peak] of TUNES[tune]) {
       note(frequency, delay, duration, peak)

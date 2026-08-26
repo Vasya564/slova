@@ -364,8 +364,6 @@ body::after {
 
 .tally { font-size: 13px; color: var(--ink-soft); }
 
-.controls { display: flex; align-items: center; gap: 16px; }
-.sound[data-off] { text-decoration: line-through; opacity: 0.5; }
 
 .note { font-size: 13px; line-height: 1.5; color: var(--ink-soft); margin: 0; }
 

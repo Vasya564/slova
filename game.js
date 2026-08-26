@@ -1,5 +1,5 @@
 import { LEVELS, buildPuzzle, label, readPath, reverse } from './puzzle.js'
-import { play, soundEnabled, toggleSound } from './sound.js'
+import { play } from './sound.js'
 
 const MARKERS = ['--m1', '--m2', '--m3', '--m4', '--m5', '--m6', '--m7', '--m8']
 const ALL_WORDS = LEVELS.flatMap((level) => level.words)
@@ -27,7 +27,6 @@ const el = {
   tally: document.getElementById('tally'),
   note: document.getElementById('note'),
   hint: document.getElementById('hint'),
-  sound: document.getElementById('sound'),
   card: document.getElementById('card'),
   cardTitle: document.getElementById('card-title'),
   cardText: document.getElementById('card-text'),
@@ -412,10 +411,10 @@ function startLevel(index) {
   renderGrid()
   el.marks.replaceChildren()
   showScreen('game')
-  requestAnimationFrame(() => {
-    syncCellSize()
-    drawMarks()
-  })
+  // Міряємо одразу після показу екрана: requestAnimationFrame у фоновій
+  // вкладці не спрацьовує, і сітка лишалась би з типовим розміром літер.
+  syncCellSize()
+  drawMarks()
 }
 
 function finishLevel() {
@@ -464,13 +463,6 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeCard()
 })
 
-el.sound.addEventListener('click', () => renderSound(toggleSound()))
-
-function renderSound(on) {
-  el.sound.toggleAttribute('data-off', !on)
-  el.sound.setAttribute('aria-pressed', String(on))
-}
-
 el.next.addEventListener('click', () => {
   el.curtain.removeAttribute('data-active')
   startLevel(state.levelIndex + 1)
@@ -486,13 +478,13 @@ document.getElementById('again').addEventListener('click', () => {
   startLevel(0)
 })
 
-window.addEventListener('resize', () => {
+// Сітка змінює розмір не лише від вікна — ще й коли дозавантажився шрифт
+// або телефон перевернули, тож слухаємо саму сітку.
+new ResizeObserver(() => {
   if (!state.puzzle) return
   syncCellSize()
   drawMarks()
-})
-
-renderSound(soundEnabled())
+}).observe(el.grid)
 
 const passed = passedLevels()
 renderPips(passed, passed < LEVELS.length ? passed : -1)
