@@ -405,4 +405,7 @@ body::after {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* Анімації вимкнені системно — підказка тоді просто світиться ті самі 2.2 с */
+  .cell[data-hint] { background: var(--hint); }
 }
