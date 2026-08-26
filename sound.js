@@ -25,34 +25,40 @@ function note(frequency, delay, duration, peak, type = 'triangle') {
   osc.stop(at + duration + 0.02)
 }
 
-// Дзвін на кінець часу. Якщо поруч зі сторінкою лежить xp-error.mp3 (або .wav) —
-// звучить він; інакше синтезуємо свій дзвін. Оригінальний файл Microsoft у репо
-// не кладемо: це чуже аудіо, і сторінка публічна.
-const ERROR_FILES = ['xp-error.mp3', 'xp-error.wav']
+// Записані звуки: валик і помилка. Кожен вантажимо раз і тримаємо
+// розкодованим; якщо файлу немає — лишається синтез.
+const SAMPLES = { error: 'error.m4a', roller: 'roller.m4a' }
 
-// Шукаємо файл лише коли він уперше знадобиться — щоб не сипати 404 на кожне завантаження.
-let errorBytes = null
-let errorSample = null
+const decoded = new Map()
+const loading = new Map()
 
-async function fetchErrorSample() {
-  for (const file of ERROR_FILES) {
-    try {
-      const response = await fetch(file)
-      if (response.ok) return await response.arrayBuffer()
-    } catch {
-      // немає файлу — обійдемось синтезом
-    }
+async function load(name) {
+  try {
+    const response = await fetch(SAMPLES[name])
+    if (!response.ok) throw new Error(response.status)
+    const buffer = await audio().decodeAudioData(await response.arrayBuffer())
+    decoded.set(name, buffer)
+    return buffer
+  } catch {
+    decoded.set(name, null)
+    return null
   }
-  return null
 }
 
-async function errorBuffer() {
-  if (errorSample) return errorSample
-  if (!errorBytes) errorBytes = fetchErrorSample()
-  const bytes = await errorBytes
-  if (!bytes) return null
-  errorSample = await audio().decodeAudioData(bytes.slice(0))
-  return errorSample
+function sample(name) {
+  if (decoded.has(name)) return Promise.resolve(decoded.get(name))
+  if (!loading.has(name)) loading.set(name, load(name))
+  return loading.get(name)
+}
+
+function playSample(buffer, volume) {
+  const ctx = audio()
+  const source = ctx.createBufferSource()
+  const gain = ctx.createGain()
+  gain.gain.value = volume
+  source.buffer = buffer
+  source.connect(gain).connect(ctx.destination)
+  source.start()
 }
 
 // Металевий призвук дає частотна модуляція несумірним відношенням:
@@ -83,13 +89,9 @@ function bell(frequency, delay, duration, peak) {
 }
 
 async function timeIsUp() {
-  const buffer = await errorBuffer()
+  const buffer = await sample('error')
   if (buffer) {
-    const ctx = audio()
-    const source = ctx.createBufferSource()
-    source.buffer = buffer
-    source.connect(ctx.destination)
-    source.start()
+    playSample(buffer, 0.9)
     return
   }
   bell(659.25, 0, 0.6, 0.09)
@@ -120,7 +122,8 @@ function noiseBuffer(ctx) {
 // Готуємо дзвін заздалегідь: інакше перше «час вийшов» мовчить,
 // поки вантажиться й розкодовується файл.
 export function primeSounds() {
-  errorBuffer().catch(() => null)
+  sample('error')
+  sample('roller')
 }
 
 export function paintStart() {
@@ -159,8 +162,17 @@ export function paintStroke() {
   filter.frequency.setTargetAtTime(1450 + Math.random() * 700, now, 0.05)
 }
 
-// Валик: широкий низький шурхіт на весь проїзд.
-export function paintRoll(seconds) {
+// Валик: записаний проїзд, а якщо файлу немає — широкий низький шурхіт.
+export async function paintRoll() {
+  const buffer = await sample('roller')
+  if (buffer) {
+    playSample(buffer, 0.75)
+    return
+  }
+  rollSynth(1)
+}
+
+function rollSynth(seconds) {
   try {
     const ctx = audio()
     const source = ctx.createBufferSource()

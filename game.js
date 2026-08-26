@@ -486,30 +486,38 @@ function foundSecret(text, path) {
 
 /* ---------- переходи ---------- */
 
-const ROLL_STRIPE_MS = 340
-const ROLL_STAGGER = 110
-const ROLL_COVER_MS = ROLL_STAGGER * 3 + ROLL_STRIPE_MS
+const ROLL_BANDS = 5
+const ROLL_BAND_MS = 360
+const ROLL_STAGGER = 105
+const ROLL_COVER_MS = ROLL_STAGGER * (ROLL_BANDS - 1) + ROLL_BAND_MS + 120
 const ROLL_FADE_MS = 260
 const CRUMPLE_STEPS = 4
 const CRUMPLE_STEP_MS = 170
 
-// Валик кладе фарбу смугами, одну за одною. Коли екран закрито — міняємо
-// його під фарбою, а тоді фарба сходить.
+// Валик кладе горизонтальні смуги — то в один бік, то в інший, різної
+// висоти й довжини. Коли екран накрито, під фарбою міняємо екран.
+function paintBand(index) {
+  const band = document.createElement('i')
+  const height = 100 / ROLL_BANDS + 7 + Math.random() * 5
+  const top = (index / ROLL_BANDS) * 100 - 3 + Math.random() * 4
+
+  band.style.top = `${top}%`
+  band.style.height = `${height}%`
+  band.style.animationDelay = `${index * ROLL_STAGGER + Math.random() * 70}ms`
+  band.style.animationDuration = `${ROLL_BAND_MS + Math.random() * 120}ms`
+  if (index % 2) band.dataset.back = ''
+  return band
+}
+
 function rollOver(swap) {
-  const stripes = [...el.roller.children]
+  el.roller.replaceChildren(...Array.from({ length: ROLL_BANDS }, (_, i) => paintBand(i)))
   el.roller.removeAttribute('data-done')
   el.roller.setAttribute('data-active', '')
+  paintRoll()
 
-  stripes.forEach((stripe, i) => {
-    stripe.style.animation = 'none'
-    void stripe.offsetWidth
-    stripe.style.animation = ''
-    window.setTimeout(() => paintRoll(ROLL_STRIPE_MS / 1000), i * ROLL_STAGGER)
-  })
-
-  window.setTimeout(swap, ROLL_COVER_MS + 40)
-  window.setTimeout(() => el.roller.setAttribute('data-done', ''), ROLL_COVER_MS + 90)
-  window.setTimeout(() => el.roller.removeAttribute('data-active'), ROLL_COVER_MS + 90 + ROLL_FADE_MS)
+  window.setTimeout(swap, ROLL_COVER_MS)
+  window.setTimeout(() => el.roller.setAttribute('data-done', ''), ROLL_COVER_MS + 60)
+  window.setTimeout(() => el.roller.removeAttribute('data-active'), ROLL_COVER_MS + 60 + ROLL_FADE_MS)
 }
 
 // Аркуш жмакається не плавно, а ривками — на кожен крок свій злам і свій хрускіт.
@@ -617,7 +625,7 @@ const TIME_UP_CARD = {
   title: '<span class="marked">час вийшов</span>',
   text: 'сітка буде нова — спробуй ще раз',
   button: 'ще раз',
-  after: () => rollOver(() => startLevel(state.levelIndex)),
+  after: () => startLevel(state.levelIndex),
 }
 
 const SECRET_CARD = {
@@ -759,10 +767,8 @@ document.addEventListener('keydown', (event) => {
 })
 
 el.next.addEventListener('click', () => {
-  rollOver(() => {
-    el.curtain.removeAttribute('data-active')
-    startLevel(state.levelIndex + 1)
-  })
+  el.curtain.removeAttribute('data-active')
+  startLevel(state.levelIndex + 1)
 })
 
 document.getElementById('start').addEventListener('click', () => {
