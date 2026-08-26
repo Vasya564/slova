@@ -286,17 +286,6 @@ body::after {
 
 .cell[data-anchor] { transform: scale(1.18); font-weight: 700; }
 
-/* Підказка: клітинка з першою літерою слова двічі спалахує його кольором. */
-.cell[data-hint] {
-  font-weight: 700;
-  animation: hint 1.05s ease-in-out 2;
-}
-
-@keyframes hint {
-  0%, 100% { background: var(--paper); }
-  40% { background: var(--hint); }
-}
-
 .marks {
   position: absolute;
   inset: 0;
@@ -391,6 +380,10 @@ body::after {
 
 .curtain-card p { color: var(--ink-soft); margin: 0; font-size: 15px; line-height: 1.55; }
 
+/* Похвала замість підказки: ширша картка, щоб фраза лягла у два рядки */
+#praise .curtain-card { max-width: 440px; }
+#praise .curtain-card h2 { font-size: clamp(24px, 5.4vw, 33px); }
+
 @media (max-width: 760px) {
   .stage { justify-content: flex-start; }
   .board { grid-template-columns: 1fr; }
@@ -405,7 +398,4 @@ body::after {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-
-  /* Анімації вимкнені системно — підказка тоді просто світиться ті самі 2.2 с */
-  .cell[data-hint] { background: var(--hint); }
 }

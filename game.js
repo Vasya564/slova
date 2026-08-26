@@ -17,6 +17,8 @@ const el = {
   tally: document.getElementById('tally'),
   note: document.getElementById('note'),
   hint: document.getElementById('hint'),
+  praise: document.getElementById('praise'),
+  praiseClose: document.getElementById('praise-close'),
   curtain: document.getElementById('curtain'),
   curtainTitle: document.getElementById('curtain-title'),
   curtainNote: document.getElementById('curtain-note'),
@@ -34,8 +36,6 @@ const state = {
   selection: null,
   anchor: null,
   dragging: false,
-  hint: null,
-  hintTimer: 0,
 }
 
 const level = () => LEVELS[state.levelIndex]
@@ -274,27 +274,10 @@ function submit(path) {
   }
 }
 
-/* ---------- підказка ---------- */
+/* ---------- похвала замість підказки ---------- */
 
-function showHint() {
-  const hidden = state.puzzle.placements.filter((p) => !state.found.has(p.word))
-  if (!hidden.length) return
-
-  clearHint()
-  const spot = hidden[Math.floor(Math.random() * hidden.length)]
-  const first = spot.cells[0]
-  const cell = state.cells[first.r][first.c]
-  cell.style.setProperty('--hint', COLOR.get(spot.word))
-  cell.dataset.hint = ''
-  state.hint = cell
-  state.hintTimer = window.setTimeout(clearHint, 2200)
-}
-
-function clearHint() {
-  window.clearTimeout(state.hintTimer)
-  if (!state.hint) return
-  state.hint.removeAttribute('data-hint')
-  state.hint = null
+function closePraise() {
+  el.praise.removeAttribute('data-active')
 }
 
 /* ---------- перебіг рівнів ---------- */
@@ -307,8 +290,6 @@ function startLevel(index) {
   state.selection = null
   state.anchor = null
   state.dragging = false
-  state.hint = null
-  window.clearTimeout(state.hintTimer)
 
   el.note.textContent = level().note
   renderPips()
@@ -359,7 +340,14 @@ el.grid.addEventListener('pointercancel', () => {
   drawMarks()
 })
 
-el.hint.addEventListener('click', showHint)
+el.hint.addEventListener('click', () => el.praise.setAttribute('data-active', ''))
+el.praiseClose.addEventListener('click', closePraise)
+el.praise.addEventListener('click', (event) => {
+  if (event.target === el.praise) closePraise()
+})
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closePraise()
+})
 
 el.next.addEventListener('click', () => {
   el.curtain.removeAttribute('data-active')
