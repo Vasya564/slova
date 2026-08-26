@@ -25,20 +25,80 @@ function note(frequency, delay, duration, peak, type = 'triangle') {
   osc.stop(at + duration + 0.02)
 }
 
-// Кінець часу дзвонить на манер windows xp: два дзвінких тони, другий нижчий,
-// плюс тихі верхні обертони для металевого призвуку. Це власна імітація —
-// оригінальний файл Microsoft у відкриту сторінку класти не можна.
-const XP_ERROR = [
-  [659.25, 0, 0.34, 0.085, 'sine'],
-  [1318.5, 0, 0.16, 0.03, 'sine'],
-  [493.88, 0.17, 0.46, 0.08, 'sine'],
-  [987.77, 0.17, 0.2, 0.028, 'sine'],
-]
+// Дзвін на кінець часу. Якщо поруч зі сторінкою лежить xp-error.mp3 (або .wav) —
+// звучить він; інакше синтезуємо свій дзвін. Оригінальний файл Microsoft у репо
+// не кладемо: це чуже аудіо, і сторінка публічна.
+const ERROR_FILES = ['xp-error.mp3', 'xp-error.wav']
+
+// Шукаємо файл лише коли він уперше знадобиться — щоб не сипати 404 на кожне завантаження.
+let errorBytes = null
+let errorSample = null
+
+async function fetchErrorSample() {
+  for (const file of ERROR_FILES) {
+    try {
+      const response = await fetch(file)
+      if (response.ok) return await response.arrayBuffer()
+    } catch {
+      // немає файлу — обійдемось синтезом
+    }
+  }
+  return null
+}
+
+async function errorBuffer() {
+  if (errorSample) return errorSample
+  if (!errorBytes) errorBytes = fetchErrorSample()
+  const bytes = await errorBytes
+  if (!bytes) return null
+  errorSample = await audio().decodeAudioData(bytes.slice(0))
+  return errorSample
+}
+
+// Металевий призвук дає частотна модуляція несумірним відношенням:
+// модулятор на 1.41 від несучої розкладається на негармонійні обертони.
+function bell(frequency, delay, duration, peak) {
+  const ctx = audio()
+  const at = ctx.currentTime + delay
+  const carrier = ctx.createOscillator()
+  const modulator = ctx.createOscillator()
+  const index = ctx.createGain()
+  const gain = ctx.createGain()
+
+  carrier.frequency.value = frequency
+  modulator.frequency.value = frequency * 1.41
+  index.gain.setValueAtTime(frequency * 1.7, at)
+  index.gain.exponentialRampToValueAtTime(frequency * 0.04, at + duration * 0.55)
+
+  gain.gain.setValueAtTime(0.0001, at)
+  gain.gain.exponentialRampToValueAtTime(peak, at + 0.006)
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + duration)
+
+  modulator.connect(index).connect(carrier.frequency)
+  carrier.connect(gain).connect(ctx.destination)
+  modulator.start(at)
+  carrier.start(at)
+  modulator.stop(at + duration + 0.05)
+  carrier.stop(at + duration + 0.05)
+}
+
+async function timeIsUp() {
+  const buffer = await errorBuffer()
+  if (buffer) {
+    const ctx = audio()
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    source.connect(ctx.destination)
+    source.start()
+    return
+  }
+  bell(659.25, 0, 0.6, 0.09)
+  bell(493.88, 0.19, 0.85, 0.085)
+}
 
 const TUNES = {
   found: [[659, 0, 0.18, 0.07], [988, 0.07, 0.22, 0.05]],
   miss: [[196, 0, 0.14, 0.035]],
-  timeout: XP_ERROR,
   secret: [[784, 0, 0.16, 0.06], [1047, 0.08, 0.18, 0.05], [1319, 0.16, 0.3, 0.045]],
   level: [[523, 0, 0.16, 0.06], [659, 0.09, 0.16, 0.055], [880, 0.18, 0.32, 0.05]],
 }
@@ -55,6 +115,12 @@ function noiseBuffer(ctx) {
   const channel = noise.getChannelData(0)
   for (let i = 0; i < channel.length; i++) channel[i] = Math.random() * 2 - 1
   return noise
+}
+
+// Готуємо дзвін заздалегідь: інакше перше «час вийшов» мовчить,
+// поки вантажиться й розкодовується файл.
+export function primeSounds() {
+  errorBuffer().catch(() => null)
 }
 
 export function paintStart() {
@@ -93,6 +159,94 @@ export function paintStroke() {
   filter.frequency.setTargetAtTime(1450 + Math.random() * 700, now, 0.05)
 }
 
+// Валик: широкий низький шурхіт на весь проїзд.
+export function paintRoll(seconds) {
+  try {
+    const ctx = audio()
+    const source = ctx.createBufferSource()
+    source.buffer = noiseBuffer(ctx)
+    source.loop = true
+
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.value = 900
+    filter.Q.value = 0.8
+
+    const gain = ctx.createGain()
+    const now = ctx.currentTime
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.07, now + 0.12)
+    gain.gain.setValueAtTime(0.07, now + seconds * 0.7)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + seconds)
+
+    source.connect(filter).connect(gain).connect(ctx.destination)
+    source.start(now)
+    source.stop(now + seconds + 0.05)
+  } catch {
+    // тиша теж фарбує
+  }
+}
+
+// Ляпка: короткий вологий удар — низький глухий тон плюс сплеск шуму.
+export function splash() {
+  try {
+    const ctx = audio()
+    const now = ctx.currentTime
+
+    const source = ctx.createBufferSource()
+    source.buffer = noiseBuffer(ctx)
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(2600, now)
+    filter.frequency.exponentialRampToValueAtTime(420, now + 0.18)
+    const wet = ctx.createGain()
+    wet.gain.setValueAtTime(0.0001, now)
+    wet.gain.exponentialRampToValueAtTime(0.11, now + 0.008)
+    wet.gain.exponentialRampToValueAtTime(0.0001, now + 0.22)
+    source.connect(filter).connect(wet).connect(ctx.destination)
+    source.start(now, Math.random())
+    source.stop(now + 0.26)
+
+    const thud = ctx.createOscillator()
+    const body = ctx.createGain()
+    thud.frequency.setValueAtTime(180, now)
+    thud.frequency.exponentialRampToValueAtTime(58, now + 0.16)
+    body.gain.setValueAtTime(0.0001, now)
+    body.gain.exponentialRampToValueAtTime(0.08, now + 0.01)
+    body.gain.exponentialRampToValueAtTime(0.0001, now + 0.24)
+    thud.connect(body).connect(ctx.destination)
+    thud.start(now)
+    thud.stop(now + 0.28)
+  } catch {
+    // тиха ляпка
+  }
+}
+
+// Хрускіт паперу на кожен крок жмакання.
+export function crumple(step) {
+  try {
+    const ctx = audio()
+    const source = ctx.createBufferSource()
+    source.buffer = noiseBuffer(ctx)
+
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'highpass'
+    filter.frequency.value = 900 + step * 350
+
+    const gain = ctx.createGain()
+    const now = ctx.currentTime
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.05 + step * 0.012, now + 0.012)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16)
+
+    source.connect(filter).connect(gain).connect(ctx.destination)
+    source.start(now, Math.random())
+    source.stop(now + 0.2)
+  } catch {
+    // без хрускоту теж мнеться
+  }
+}
+
 export function paintStop() {
   if (!paint) return
   const { ctx, source, gain } = paint
@@ -106,6 +260,10 @@ export function paintStop() {
 
 export function play(tune) {
   try {
+    if (tune === 'timeout') {
+      timeIsUp()
+      return
+    }
     for (const [frequency, delay, duration, peak, type] of TUNES[tune]) {
       note(frequency, delay, duration, peak, type)
     }

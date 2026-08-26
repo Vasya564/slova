@@ -87,8 +87,27 @@
       <feTurbulence type="fractalNoise" baseFrequency="0.025 0.4" numOctaves="2" seed="9" result="bristles" />
       <feDisplacementMap in="SourceGraphic" in2="bristles" scale="3.2" xChannelSelector="R" yChannelSelector="G" />
     </filter>
+    <!-- Жмакання: що далі крок, то сильніше шум ламає папір -->
+    <filter id="crumple-1" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="3" result="folds" />
+      <feDisplacementMap in="SourceGraphic" in2="folds" scale="9" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crumple-2" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="5" result="folds" />
+      <feDisplacementMap in="SourceGraphic" in2="folds" scale="20" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crumple-3" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.026" numOctaves="4" seed="8" result="folds" />
+      <feDisplacementMap in="SourceGraphic" in2="folds" scale="36" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="crumple-4" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="11" result="folds" />
+      <feDisplacementMap in="SourceGraphic" in2="folds" scale="58" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
   </defs>
 </svg>
+
+<div class="roller" id="roller" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
 <span id="announce" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"></span>
 

@@ -1,5 +1,5 @@
 import { EMOJI, LEVELS, buildPuzzle, label, levelSeconds, readPath, reverse } from './puzzle.js'
-import { paintStart, paintStop, paintStroke, play } from './sound.js'
+import { crumple, paintRoll, paintStart, paintStop, paintStroke, play, primeSounds, splash } from './sound.js'
 
 const MARKERS = ['--m1', '--m2', '--m3', '--m4', '--m5', '--m6', '--m7', '--m8']
 const ALL_WORDS = LEVELS.flatMap((level) => level.words)
@@ -20,6 +20,7 @@ const el = {
   finale: document.getElementById('finale'),
   levels: document.getElementById('levels'),
   sheet: document.getElementById('sheet'),
+  roller: document.getElementById('roller'),
   grid: document.getElementById('grid'),
   gridWrap: document.querySelector('.grid-wrap'),
   marks: document.getElementById('marks'),
@@ -483,6 +484,54 @@ function foundSecret(text, path) {
   return true
 }
 
+/* ---------- переходи ---------- */
+
+const ROLL_STRIPE_MS = 340
+const ROLL_STAGGER = 110
+const ROLL_COVER_MS = ROLL_STAGGER * 3 + ROLL_STRIPE_MS
+const ROLL_FADE_MS = 260
+const CRUMPLE_STEPS = 4
+const CRUMPLE_STEP_MS = 170
+
+// Валик кладе фарбу смугами, одну за одною. Коли екран закрито — міняємо
+// його під фарбою, а тоді фарба сходить.
+function rollOver(swap) {
+  const stripes = [...el.roller.children]
+  el.roller.removeAttribute('data-done')
+  el.roller.setAttribute('data-active', '')
+
+  stripes.forEach((stripe, i) => {
+    stripe.style.animation = 'none'
+    void stripe.offsetWidth
+    stripe.style.animation = ''
+    window.setTimeout(() => paintRoll(ROLL_STRIPE_MS / 1000), i * ROLL_STAGGER)
+  })
+
+  window.setTimeout(swap, ROLL_COVER_MS + 40)
+  window.setTimeout(() => el.roller.setAttribute('data-done', ''), ROLL_COVER_MS + 90)
+  window.setTimeout(() => el.roller.removeAttribute('data-active'), ROLL_COVER_MS + 90 + ROLL_FADE_MS)
+}
+
+// Аркуш жмакається не плавно, а ривками — на кожен крок свій злам і свій хрускіт.
+function crumpleSheet(done) {
+  let step = 0
+  const fold = () => {
+    step += 1
+    el.sheet.dataset.crumple = String(step)
+    crumple(step)
+    if (step < CRUMPLE_STEPS) {
+      window.setTimeout(fold, CRUMPLE_STEP_MS)
+      return
+    }
+    window.setTimeout(done, CRUMPLE_STEP_MS + 120)
+  }
+  fold()
+}
+
+function flattenSheet() {
+  el.sheet.removeAttribute('data-crumple')
+}
+
 /* ---------- час ---------- */
 
 const LOW_TIME_MS = 10_000
@@ -536,8 +585,10 @@ function timeUp() {
   stopTimer()
   state.remaining = 0
   el.clockLine.removeAttribute('data-low')
-  play('timeout')
-  openCard(TIME_UP_CARD)
+  crumpleSheet(() => {
+    play('timeout')
+    openCard(TIME_UP_CARD)
+  })
 }
 
 /* ---------- картки-репліки ---------- */
@@ -566,7 +617,7 @@ const TIME_UP_CARD = {
   title: '<span class="marked">час вийшов</span>',
   text: 'сітка буде нова — спробуй ще раз',
   button: 'ще раз',
-  after: () => startLevel(state.levelIndex),
+  after: () => rollOver(() => startLevel(state.levelIndex)),
 }
 
 const SECRET_CARD = {
@@ -577,6 +628,7 @@ const SECRET_CARD = {
 
 function openCard(card) {
   pauseTimer()
+  splash()
   el.cardTitle.innerHTML = card.title
   el.cardText.textContent = card.text
   el.cardClose.textContent = card.button
@@ -625,6 +677,7 @@ function clearHint() {
 /* ---------- перебіг рівнів ---------- */
 
 function startLevel(index) {
+  flattenSheet()
   state.levelIndex = index
   state.puzzle = buildPuzzle(level())
   state.found = new Map()
@@ -636,6 +689,7 @@ function startLevel(index) {
   state.hintPresses = 0
   clearHint()
 
+  primeSounds()
   startTimer(levelSeconds(level()))
   el.note.textContent = level().note
   renderPips()
@@ -705,18 +759,21 @@ document.addEventListener('keydown', (event) => {
 })
 
 el.next.addEventListener('click', () => {
-  el.curtain.removeAttribute('data-active')
-  startLevel(state.levelIndex + 1)
+  rollOver(() => {
+    el.curtain.removeAttribute('data-active')
+    startLevel(state.levelIndex + 1)
+  })
 })
 
 document.getElementById('start').addEventListener('click', () => {
   const passed = passedLevels()
-  startLevel(passed >= LEVELS.length ? 0 : passed)
+  primeSounds()
+  rollOver(() => startLevel(passed >= LEVELS.length ? 0 : passed))
 })
 
 document.getElementById('again').addEventListener('click', () => {
   rememberPassed(0)
-  startLevel(0)
+  rollOver(() => startLevel(0))
 })
 
 // Сітка змінює розмір не лише від вікна — ще й коли дозавантажився шрифт

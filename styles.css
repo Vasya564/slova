@@ -19,6 +19,14 @@
   --m8: #ffc7bc;
   --warn: #cf7a63;
 
+  /* Той самий мазок, що й у сітці, запечений у маску для підкреслень */
+  --brush: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 231.99999999999997 39' preserveAspectRatio='none'%3E%3Cg transform='translate(0 19.5)'%3E%3Cpath d='M0.0,1.5L6.7,-8.7L13.3,-12.3L20.0,-11.2L26.7,-11.6L33.3,-10.8L40.0,-10.7L46.7,-9.0L53.3,-8.2L60.0,-8.7L66.7,-9.1L73.3,-6.6L80.0,-7.7L86.7,-6.9L93.3,-6.7L100.0,-9.2L106.7,-9.0L113.3,-7.9L120.0,-8.7L126.7,-10.0L133.3,-11.1L140.0,-9.0L146.7,-11.0L153.3,-11.1L160.0,-11.7L166.7,-11.3L173.3,-9.2L180.0,-8.2L186.7,-6.9L193.3,-5.7L200.0,-1.1L200.0,-1.1L193.3,4.8L186.7,8.5L180.0,11.3L173.3,12.7L166.7,10.9L160.0,10.7L153.3,11.2L146.7,11.0L140.0,12.5L133.3,9.9L126.7,10.2L120.0,10.7L113.3,10.8L106.7,9.1L100.0,8.3L93.3,10.4L86.7,10.1L80.0,9.3L73.3,10.7L66.7,8.7L60.0,9.6L53.3,10.9L46.7,10.8L40.0,9.9L33.3,10.4L26.7,10.2L20.0,11.0L13.3,10.1L6.7,9.5L0.0,1.5Z' fill='%23000' opacity='.95'/%3E%3Cpath d='M2.3,-10.9L36.8,-10.6L71.2,-10.2L105.7,-10.0L140.1,-9.9L174.6,-9.3L209.0,-9.1L209.0,-8.4L174.6,-7.5L140.1,-6.4L105.7,-6.3L71.2,-6.5L36.8,-6.9L2.3,-7.8ZM15.4,-8.2L46.8,-7.7L78.2,-6.9L109.6,-6.4L140.9,-6.0L172.3,-4.8L203.7,-4.1L203.7,-3.4L172.3,-2.9L140.9,-2.1L109.6,-2.3L78.2,-2.9L46.8,-3.6L15.4,-4.8ZM6.2,-5.9L36.0,-6.2L65.7,-6.2L95.4,-6.3L125.1,-6.5L154.8,-5.9L184.6,-5.7L184.6,-5.0L154.8,-3.6L125.1,-2.0L95.4,-1.5L65.7,-1.4L36.0,-1.4L6.2,-1.9ZM2.9,-3.8L29.5,-4.3L56.2,-4.3L82.8,-4.5L109.4,-4.7L136.1,-3.7L162.7,-3.3L162.7,-2.6L136.1,-0.9L109.4,1.0L82.8,1.4L56.2,1.6L29.5,1.7L2.9,1.2ZM7.2,-1.8L44.5,-2.3L81.7,-2.3L119.0,-2.5L156.2,-2.9L193.4,-1.7L230.7,-0.9L230.7,-0.2L193.4,2.0L156.2,4.6L119.0,5.3L81.7,5.5L44.5,5.5L7.2,4.7ZM19.5,1.8L44.0,2.0L68.5,2.5L92.9,2.9L117.4,3.4L141.9,4.9L166.4,6.1L166.4,6.8L141.9,7.7L117.4,8.9L92.9,8.7L68.5,8.3L44.0,7.8L19.5,6.7ZM6.1,5.1L39.8,5.1L73.4,5.4L107.1,5.5L140.8,5.4L174.5,6.0L208.1,6.2L208.1,6.9L174.5,8.0L140.8,9.3L107.1,9.5L73.4,9.5L39.8,9.2L6.1,8.5ZM11.4,8.6L42.7,9.2L74.0,9.8L105.4,10.3L136.7,10.6L168.1,11.3L199.4,11.5L199.4,12.2L168.1,12.3L136.7,12.8L105.4,12.5L74.0,12.1L42.7,11.4L11.4,10.4Z' fill='%23000' opacity='.72'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* Клякса для карток і патьоки з-під неї */
+  --splat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500' preserveAspectRatio='none'%3E%3Cpath d='M598.2,250.0L713.1,265.0L577.4,267.1L591.5,278.0L577.0,285.0L570.9,293.0L572.2,303.2L576.2,315.2L563.4,321.4L558.2,330.9L660.0,404.7L531.1,340.6L523.0,348.9L512.3,355.6L498.9,359.8L513.1,400.6L470.8,365.7L458.4,371.4L441.3,366.0L447.0,449.7L413.5,365.8L400.0,368.6L386.4,366.3L372.6,366.5L359.6,363.4L346.6,361.0L325.4,371.9L309.2,370.8L267.1,397.6L292.7,350.9L273.5,351.7L256.0,349.5L255.0,336.2L249.2,327.1L227.6,325.4L225.6,314.6L214.6,307.2L221.4,294.9L219.8,285.6L204.9,278.6L203.1,269.0L203.8,259.4L217.6,250.0L98.1,235.5L204.2,231.1L208.2,221.9L213.9,213.2L214.0,203.2L228.7,197.1L221.9,184.1L112.4,124.3L245.2,170.8L254.8,163.6L270.6,160.6L201.8,90.7L290.1,146.7L302.4,141.6L310.6,131.1L325.2,127.9L345.4,136.5L355.4,124.9L373.2,136.2L386.2,131.8L400.0,130.1L413.4,135.6L427.0,135.3L441.6,133.3L459.8,125.6L467.6,139.5L486.9,134.3L505.6,132.7L515.2,141.7L522.7,151.4L530.7,159.7L540.3,166.6L552.9,171.9L571.6,175.0L574.9,185.3L578.7,194.8L573.7,206.3L584.6,213.5L658.0,212.2L593.3,231.3L580.6,241.3ZM441.8,75.6a12.0,4.8 0 1,0 24.0,0a12.0,4.8 0 1,0 -24.0,0ZM220.8,160.6a15.5,11.9 0 1,0 31.0,0a15.5,11.9 0 1,0 -31.0,0ZM157.8,284.2a19.8,9.1 0 1,0 39.6,0a19.8,9.1 0 1,0 -39.6,0ZM138.9,281.4a4.6,4.4 0 1,0 9.2,0a4.6,4.4 0 1,0 -9.2,0ZM209.7,118.7a7.6,4.4 0 1,0 15.2,0a7.6,4.4 0 1,0 -15.2,0ZM203.0,322.2a11.3,7.3 0 1,0 22.5,0a11.3,7.3 0 1,0 -22.5,0ZM329.1,108.3a19.3,11.3 0 1,0 38.7,0a19.3,11.3 0 1,0 -38.7,0ZM264.8,149.0a11.9,4.8 0 1,0 23.9,0a11.9,4.8 0 1,0 -23.9,0ZM388.5,404.1a10.7,4.5 0 1,0 21.4,0a10.7,4.5 0 1,0 -21.4,0ZM648.9,281.4a9.0,5.2 0 1,0 17.9,0a9.0,5.2 0 1,0 -17.9,0ZM479.4,121.1a6.5,2.6 0 1,0 13.1,0a6.5,2.6 0 1,0 -13.1,0ZM174.7,267.2a11.2,7.2 0 1,0 22.3,0a11.2,7.2 0 1,0 -22.3,0ZM439.4,400.5a5.4,4.8 0 1,0 10.8,0a5.4,4.8 0 1,0 -10.8,0ZM509.1,357.0a6.9,4.6 0 1,0 13.9,0a6.9,4.6 0 1,0 -13.9,0ZM254.7,414.7a12.2,6.2 0 1,0 24.3,0a12.2,6.2 0 1,0 -24.3,0ZM613.6,317.6a16.8,7.1 0 1,0 33.5,0a16.8,7.1 0 1,0 -33.5,0Z' fill='%23000'/%3E%3C/svg%3E");
+  --drips: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 120' preserveAspectRatio='none'%3E%3Cpath d='M57.9,0C57.9,16.2 60.3,24.1 60.3,34.5L66.0,34.5C66.0,24.1 68.3,16.2 68.3,0ZM51.4,34.5a11.7,11.7 0 1,0 23.4,0a11.7,11.7 0 1,0 -23.4,0ZM150.6,0C150.6,29.4 153.1,50.2 153.1,71.7L159.1,71.7C159.1,50.2 161.6,29.4 161.6,0ZM143.8,71.7a12.3,12.3 0 1,0 24.5,0a12.3,12.3 0 1,0 -24.5,0ZM248.1,0C248.1,12.8 250.5,16.9 250.5,24.1L256.4,24.1C256.4,16.9 258.8,12.8 258.8,0ZM241.1,24.1a12.4,12.4 0 1,0 24.7,0a12.4,12.4 0 1,0 -24.7,0Z' fill='%23000'/%3E%3C/svg%3E");
+  --roller-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 26' preserveAspectRatio='none'%3E%3Cpath d='M0,0L120,0L120,6L120.0,23.7L115.4,20.4L110.8,9.7L106.2,7.4L101.5,13.2L96.9,16.3L92.3,15.2L87.7,19.6L83.1,6.2L78.5,14.8L73.8,21.9L69.2,19.9L64.6,22.0L60.0,8.9L55.4,23.9L50.8,9.3L46.2,9.2L41.5,8.5L36.9,23.8L32.3,17.9L27.7,16.9L23.1,19.9L18.5,12.0L13.8,7.5L9.2,12.6L4.6,6.3L0.0,10.4L0,6Z' fill='%23000'/%3E%3C/svg%3E");
+
   --display: 'Unbounded', 'Trebuchet MS', sans-serif;
   --body: 'Manrope', -apple-system, 'Segoe UI', sans-serif;
 
@@ -81,8 +89,21 @@ body::after {
   text-transform: lowercase;
   margin: 0;
   padding-bottom: 4px;
-  background: linear-gradient(var(--m6), var(--m6)) no-repeat 0 88%;
-  background-size: 100% 8px;
+  position: relative;
+  isolation: isolate;
+}
+
+.wordmark::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: -6px;
+  right: -8px;
+  bottom: -2px;
+  height: 14px;
+  background: var(--m6);
+  -webkit-mask: var(--brush) no-repeat center / 100% 100%;
+  mask: var(--brush) no-repeat center / 100% 100%;
 }
 
 .levels { display: flex; gap: 8px; }
@@ -145,10 +166,23 @@ body::after {
 .cover .rules { font-size: 15px; }
 
 .marked {
-  background: linear-gradient(var(--m3), var(--m3)) no-repeat 0 74%;
-  background-size: 100% 0.5em;
+  position: relative;
+  isolation: isolate;
   color: var(--ink);
   padding: 0 2px;
+}
+
+.marked::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: -0.14em;
+  right: -0.16em;
+  top: 0.42em;
+  height: 0.72em;
+  background: var(--m3);
+  -webkit-mask: var(--brush) no-repeat center / 100% 100%;
+  mask: var(--brush) no-repeat center / 100% 100%;
 }
 
 .button {
@@ -206,16 +240,16 @@ body::after {
   left: -0.06em;
   right: -0.06em;
   top: 50%;
-  height: 0.42em;
+  height: 0.46em;
   z-index: -1;
-  border-radius: 999px;
   background: var(--m5);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) 0.3s;
+  -webkit-mask: var(--brush) no-repeat center / 100% 100%;
+  mask: var(--brush) no-repeat center / 100% 100%;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) 0.3s;
 }
 
-.finale[data-active] h1::before { transform: scaleX(1); }
+.finale[data-active] h1::before { clip-path: inset(0 0 0 0); }
 
 .collected {
   display: flex;
@@ -332,9 +366,67 @@ body::after {
   height: 100%;
   pointer-events: none;
   mix-blend-mode: multiply;
+  /* Фарба збігає за край сітки й аркуша, а не обрізається по ньому */
+  overflow: visible;
 }
 
 .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* Валик: смуга фарби проїжджає екраном і за нею вже новий екран */
+.roller {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+  display: none;
+}
+
+.roller[data-active] { display: block; }
+
+.roller { transition: opacity 0.26s ease; }
+.roller[data-done] { opacity: 0; }
+
+/* Смуга фарби: валик проходить згори вниз і лишає рваний нижній край */
+.roller i {
+  position: absolute;
+  top: 0;
+  height: 0;
+  width: 27%;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0 2px, rgba(255, 255, 255, 0) 2px 9px),
+    linear-gradient(90deg, #cfc3f0 0%, #e4dcf8 45%, #d3c8f2 100%);
+  animation: roll 0.34s cubic-bezier(0.35, 0.1, 0.4, 1) forwards;
+}
+
+.roller i::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 22px;
+  background: inherit;
+  -webkit-mask: var(--roller-edge) no-repeat center top / 100% 100%;
+  mask: var(--roller-edge) no-repeat center top / 100% 100%;
+}
+
+.roller i:nth-child(1) { left: 0; animation-delay: 0ms; }
+.roller i:nth-child(2) { left: 24.5%; animation-delay: 110ms; }
+.roller i:nth-child(3) { left: 49%; animation-delay: 220ms; }
+.roller i:nth-child(4) { left: 73.5%; width: 27.5%; animation-delay: 330ms; }
+
+@keyframes roll {
+  from { height: 0; }
+  to { height: 100%; }
+}
+
+/* Час вийшов — аркуш жмакається покроково */
+.sheet[data-crumple] { transition: none; }
+.sheet[data-crumple='1'] { filter: url(#crumple-1); transform: scale(0.97) rotate(-0.7deg); }
+.sheet[data-crumple='2'] { filter: url(#crumple-2); transform: scale(0.9) rotate(1.3deg); }
+.sheet[data-crumple='3'] { filter: url(#crumple-3); transform: scale(0.77) rotate(-2.2deg); }
+.sheet[data-crumple='4'] { filter: url(#crumple-4); transform: scale(0.58) rotate(3.4deg); opacity: 0.85; }
 
 /* ---------- панель слів ---------- */
 
@@ -357,18 +449,32 @@ body::after {
 .words { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 
 .word {
+  position: relative;
+  isolation: isolate;
   font-size: 19px;
   font-weight: 600;
   color: var(--ink-soft);
   padding: 2px 6px;
-  background-image: linear-gradient(var(--c), var(--c));
-  background-repeat: no-repeat;
-  background-position: 0 68%;
-  background-size: 0% 0.62em;
-  transition: background-size 0.55s cubic-bezier(0.2, 0.7, 0.3, 1), color 0.4s ease;
+  transition: color 0.4s ease;
 }
 
-.word[data-found] { color: var(--ink); background-size: 100% 0.62em; }
+.word::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: -2px;
+  right: -4px;
+  top: 0.44em;
+  height: 0.8em;
+  background: var(--c);
+  -webkit-mask: var(--brush) no-repeat center / 100% 100%;
+  mask: var(--brush) no-repeat center / 100% 100%;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.55s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.word[data-found] { color: var(--ink); }
+.word[data-found]::before { clip-path: inset(0 0 0 0); }
 
 .clock-line { display: flex; align-items: center; gap: 12px; }
 
@@ -437,14 +543,51 @@ body::after {
 .curtain[data-active] { display: grid; }
 
 .curtain-card {
-  background: var(--paper);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: clamp(26px, 5vw, 44px);
+  position: relative;
+  isolation: isolate;
+  padding: clamp(30px, 5vw, 46px);
   text-align: center;
   max-width: 400px;
-  animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+  animation: splat 0.5s cubic-bezier(0.2, 1.1, 0.35, 1);
+}
+
+/* Сама ляпка: паперова фарба з нерівним краєм */
+.curtain-card::before {
+  content: '';
+  position: absolute;
+  inset: -120px -205px -100px;
+  z-index: -1;
+  background: var(--paper);
+  -webkit-mask: var(--splat) no-repeat center / 100% 100%;
+  mask: var(--splat) no-repeat center / 100% 100%;
+  filter: drop-shadow(0 18px 28px rgba(60, 50, 100, 0.26));
+}
+
+/* Патьоки стікають з-під ляпки — трохи, як по склу */
+.curtain-card::after {
+  content: '';
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  top: 100%;
+  height: 92px;
+  margin-top: -34px;
+  z-index: -1;
+  background: var(--paper);
+  -webkit-mask: var(--drips) no-repeat center top / 100% 100%;
+  mask: var(--drips) no-repeat center top / 100% 100%;
+  clip-path: inset(0 0 100% 0);
+  animation: drip 1s cubic-bezier(0.3, 0.55, 0.25, 1) 0.22s forwards;
+}
+
+@keyframes splat {
+  0% { transform: scale(0.55) translateY(-18px); opacity: 0; }
+  55% { transform: scale(1.06, 0.93) translateY(5px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes drip {
+  to { clip-path: inset(0 0 0 0); }
 }
 
 .curtain-card h2 {
