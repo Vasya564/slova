@@ -84,8 +84,8 @@
   <defs>
     <!-- Рвані краї мазка: шум зміщує контур фігури, як щетина пензля -->
     <filter id="brush" x="-20%" y="-60%" width="140%" height="220%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.04 0.16" numOctaves="2" seed="9" result="bristles" />
-      <feDisplacementMap in="SourceGraphic" in2="bristles" scale="6" xChannelSelector="R" yChannelSelector="G" />
+      <feTurbulence type="fractalNoise" baseFrequency="0.025 0.4" numOctaves="2" seed="9" result="bristles" />
+      <feDisplacementMap in="SourceGraphic" in2="bristles" scale="3.2" xChannelSelector="R" yChannelSelector="G" />
     </filter>
   </defs>
 </svg>

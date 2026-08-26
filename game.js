@@ -1,5 +1,5 @@
-import { LEVELS, buildPuzzle, label, levelSeconds, readPath, reverse } from './puzzle.js'
-import { play } from './sound.js'
+import { EMOJI, LEVELS, buildPuzzle, label, levelSeconds, readPath, reverse } from './puzzle.js'
+import { paintStart, paintStop, paintStroke, play } from './sound.js'
 
 const MARKERS = ['--m1', '--m2', '--m3', '--m4', '--m5', '--m6', '--m7', '--m8']
 const ALL_WORDS = LEVELS.flatMap((level) => level.words)
@@ -184,21 +184,65 @@ function pressure(t) {
   return Math.sqrt(Math.min(lands, lifts)) * (0.88 + 0.12 * Math.sin(t * 8.5 + 1.1))
 }
 
-function brushShape(length, half, seed) {
-  const steps = Math.min(44, Math.max(10, Math.round(length / BRUSH_SEGMENT)))
-  const random = noise(seed)
-  const upper = []
-  const lower = []
+// Мазок трохи вигинається: кінці лишаються на літерах, середина відходить убік.
+function bow(t, arc) {
+  return arc * Math.sin(Math.PI * t)
+}
+
+function ribbon(points) {
+  const upper = points.map(([x, y, w]) => `${x.toFixed(1)},${(y - w).toFixed(1)}`)
+  const lower = points.map(([x, y, w]) => `${x.toFixed(1)},${(y + w).toFixed(1)}`).reverse()
+  return `M${upper.join('L')}L${lower.join('L')}Z`
+}
+
+// Щільне тіло мазка.
+function brushBody(length, half, arc, random) {
+  const steps = Math.min(40, Math.max(10, Math.round(length / BRUSH_SEGMENT)))
+  const points = []
 
   for (let i = 0; i <= steps; i++) {
     const t = i / steps
-    const x = (t * length).toFixed(1)
-    const width = half * pressure(t)
-    upper.push(`${x},${(-width + (random() - 0.5) * half * 0.3).toFixed(1)}`)
-    lower.push(`${x},${(width + (random() - 0.5) * half * 0.3).toFixed(1)}`)
+    const wobble = (random() - 0.5) * half * 0.24
+    points.push([t * length, bow(t, arc) + wobble, half * pressure(t) * 0.86])
   }
 
-  return `M${upper.join('L')}L${lower.reverse().join('L')}Z`
+  return ribbon(points)
+}
+
+// Волосини щетини: тонкі пасма поперек ширини. Між ними просвічує папір,
+// а найдовші тягнуться далі за тіло — саме це й робить мазок сухим.
+function brushBristles(length, half, arc, random) {
+  const strands = 8
+  const paths = []
+
+  for (let i = 0; i < strands; i++) {
+    const across = (i / (strands - 1)) * 2 - 1
+    const offset = across * half * 0.72
+    const thick = half * (0.3 - 0.18 * Math.abs(across)) * (0.7 + random() * 0.6)
+    const from = length * random() * 0.1
+    const to = Math.min(length * 1.16, length * (0.78 + random() * 0.38))
+    const drift = (random() - 0.5) * half * 0.55
+    const points = []
+
+    for (let step = 0; step <= 6; step++) {
+      const t = step / 6
+      const x = from + (to - from) * t
+      const taper = Math.min(1, (1 - t) / 0.35) * Math.min(1, (t + 0.25) / 0.3)
+      points.push([x, offset + bow(x / length, arc) + drift * t, Math.max(0.35, thick * taper)])
+    }
+
+    paths.push(ribbon(points))
+  }
+
+  return paths.join('')
+}
+
+function fill(d, color, opacity) {
+  const path = svg('path')
+  path.setAttribute('d', d)
+  path.setAttribute('fill', color)
+  path.setAttribute('opacity', opacity)
+  return path
 }
 
 // Мазок від центру першої літери до центру останньої, з невеликим виходом за них.
@@ -211,18 +255,21 @@ function brush(cells, color, half, opacity) {
   const pad = half * 0.95
   const length = span + pad * 2
   const angle = (Math.atan2(uy, ux) * 180) / Math.PI
+  const random = noise(seedOf(cells))
+  const arc = (random() - 0.5) * half * 0.45
 
   const group = svg('g')
   group.setAttribute('transform', `translate(${a.x - ux * pad} ${a.y - uy * pad}) rotate(${angle})`)
 
-  const shape = svg('path')
-  shape.setAttribute('d', brushShape(length, half, seedOf(cells)))
-  shape.setAttribute('fill', color)
-  shape.setAttribute('opacity', opacity)
-  shape.setAttribute('filter', 'url(#brush)')
-  group.append(shape)
+  const layers = svg('g')
+  layers.setAttribute('filter', 'url(#brush)')
+  layers.append(
+    fill(brushBody(length, half, arc, random), color, opacity),
+    fill(brushBristles(length, half, arc, random), color, opacity * 0.7)
+  )
+  group.append(layers)
 
-  return { group, length, half }
+  return { group, layers, length, half }
 }
 
 // Мазок «наноситься» зліва направо: прямокутник відсікання росте вздовж штриха.
@@ -238,10 +285,9 @@ function paintOn(mark, id) {
   window_.setAttribute('width', 0)
   clip.append(window_)
 
-  const shape = mark.group.firstChild
   const inner = svg('g')
   inner.setAttribute('clip-path', `url(#${id})`)
-  inner.append(shape)
+  inner.append(mark.layers)
   mark.group.append(clip, inner)
 
   return () => {
@@ -250,7 +296,7 @@ function paintOn(mark, id) {
     // вкладці він мовчить.
     void window_.getBoundingClientRect()
     window_.style.transition = 'width 0.55s cubic-bezier(0.3, 0.8, 0.4, 1)'
-    window_.setAttribute('width', mark.length + mark.half * 4)
+    window_.setAttribute('width', mark.length * 1.2 + mark.half * 4)
   }
 }
 
@@ -278,6 +324,29 @@ function drawMarks() {
 
   el.marks.replaceChildren(...marks)
   for (const start of starts) start()
+}
+
+// Знайдене слово розсипає свій знак угору над сіткою.
+function sparkle(word, cells) {
+  const emoji = EMOJI[word]
+  if (!emoji) return
+
+  const size = el.grid.clientWidth / state.puzzle.size
+  for (let i = 0; i < 6; i++) {
+    const spot = centerOf(cells[Math.floor(Math.random() * cells.length)])
+    const spark = document.createElement('span')
+    spark.className = 'spark'
+    spark.textContent = emoji
+    spark.style.left = `${spot.x}px`
+    spark.style.top = `${spot.y}px`
+    spark.style.fontSize = `${size * 0.6}px`
+    spark.style.animationDelay = `${i * 70}ms`
+    spark.style.setProperty('--dx', `${(Math.random() - 0.5) * size * 2.4}px`)
+    spark.style.setProperty('--rise', `${size * (1.8 + Math.random() * 1.2)}px`)
+    spark.style.setProperty('--turn', `${(Math.random() - 0.5) * 60}deg`)
+    spark.addEventListener('animationend', () => spark.remove())
+    el.gridWrap.append(spark)
+  }
 }
 
 /* ---------- виділення ---------- */
@@ -332,6 +401,7 @@ function startSelection(event) {
   state.dragging = true
   state.selection = pathBetween(from, cell) ?? [from]
   capture(event.pointerId)
+  paintStart()
   drawMarks()
 }
 
@@ -341,7 +411,9 @@ function extendSelection(event) {
   if (!cell) return
   const path = pathBetween(state.selection[0], cell)
   if (!path) return
+  const moved = path.length !== state.selection.length
   state.selection = path
+  if (moved) paintStroke()
   drawMarks()
 }
 
@@ -349,6 +421,7 @@ function endSelection(event) {
   if (!state.dragging || !state.selection) return
   state.dragging = false
   release(event.pointerId)
+  paintStop()
 
   const path = state.selection
   state.selection = null
@@ -382,6 +455,7 @@ function submit(path) {
   if (!match) return foundSecret(text, path)
 
   play('found')
+  sparkle(match, path)
   state.found.set(match, path)
   const item = el.words.querySelector(`[data-word="${match}"]`)
   if (item) item.dataset.found = ''
@@ -403,6 +477,7 @@ function foundSecret(text, path) {
 
   state.secret = path
   play('secret')
+  sparkle(secret, path)
   el.announce.textContent = `Знайдено сховане слово: ${secret}`
   window.setTimeout(() => openCard(SECRET_CARD), 450)
   return true
@@ -461,7 +536,7 @@ function timeUp() {
   stopTimer()
   state.remaining = 0
   el.clockLine.removeAttribute('data-low')
-  play('miss')
+  play('timeout')
   openCard(TIME_UP_CARD)
 }
 
@@ -567,6 +642,7 @@ function startLevel(index) {
   renderWords()
   renderGrid()
   el.marks.replaceChildren()
+  for (const spark of el.gridWrap.querySelectorAll('.spark')) spark.remove()
   showScreen('game')
   // Міряємо одразу після показу екрана: requestAnimationFrame у фоновій
   // вкладці не спрацьовує, і сітка лишалась би з типовим розміром літер.
@@ -609,6 +685,7 @@ el.grid.addEventListener('pointerup', endSelection)
 el.grid.addEventListener('pointercancel', () => {
   state.dragging = false
   state.selection = null
+  paintStop()
   drawMarks()
 })
 
