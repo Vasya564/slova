@@ -34,6 +34,8 @@ const state = {
   selection: null,
   anchor: null,
   dragging: false,
+  hint: null,
+  hintTimer: 0,
 }
 
 const level = () => LEVELS[state.levelIndex]
@@ -141,6 +143,33 @@ function stroke(cells, color, width, opacity) {
   return { line, length: Math.hypot(b.x - a.x, b.y - a.y) }
 }
 
+// Підказка: кружечок кольору слова лягає на його першу літеру,
+// і від нього тричі розходиться кільце — помітно, але без метушні.
+function halo(hint, width) {
+  const ns = 'http://www.w3.org/2000/svg'
+  const { x, y } = centerOf(hint.cell)
+  const group = document.createElementNS(ns, 'g')
+
+  const dot = document.createElementNS(ns, 'circle')
+  dot.setAttribute('r', width * 0.42)
+  dot.setAttribute('fill', hint.color)
+  dot.setAttribute('class', 'hint-dot')
+
+  const ping = document.createElementNS(ns, 'circle')
+  ping.setAttribute('r', width * 0.42)
+  ping.setAttribute('fill', 'none')
+  ping.setAttribute('stroke', hint.color)
+  ping.setAttribute('stroke-width', '2')
+  ping.setAttribute('class', 'hint-ping')
+
+  for (const circle of [dot, ping]) {
+    circle.setAttribute('cx', x)
+    circle.setAttribute('cy', y)
+    group.append(circle)
+  }
+  return group
+}
+
 function drawMarks() {
   const width = el.grid.clientWidth / state.puzzle.size
   const marks = []
@@ -163,6 +192,8 @@ function drawMarks() {
   if (state.selection) {
     marks.push(stroke(state.selection, 'rgba(122, 116, 158, 0.28)', width * 0.72, 1).line)
   }
+
+  if (state.hint) marks.push(halo(state.hint, width))
 
   el.marks.replaceChildren(...marks)
 }
@@ -276,10 +307,23 @@ function submit(path) {
 function showHint() {
   const hidden = state.puzzle.placements.filter((p) => !state.found.has(p.word))
   if (!hidden.length) return
-  const { cells } = hidden[Math.floor(Math.random() * hidden.length)]
-  const first = state.cells[cells[0].r][cells[0].c]
-  first.dataset.hint = ''
-  window.setTimeout(() => first.removeAttribute('data-hint'), 3400)
+
+  clearHint()
+  const spot = hidden[Math.floor(Math.random() * hidden.length)]
+  state.hint = { cell: spot.cells[0], color: COLOR.get(spot.word) }
+  state.cells[spot.cells[0].r][spot.cells[0].c].dataset.hint = ''
+  state.hintTimer = window.setTimeout(() => {
+    clearHint()
+    drawMarks()
+  }, 2200)
+  drawMarks()
+}
+
+function clearHint() {
+  window.clearTimeout(state.hintTimer)
+  if (!state.hint) return
+  state.cells[state.hint.cell.r][state.hint.cell.c].removeAttribute('data-hint')
+  state.hint = null
 }
 
 /* ---------- перебіг рівнів ---------- */
@@ -292,6 +336,8 @@ function startLevel(index) {
   state.selection = null
   state.anchor = null
   state.dragging = false
+  state.hint = null
+  window.clearTimeout(state.hintTimer)
 
   el.note.textContent = level().note
   renderPips()
@@ -313,7 +359,7 @@ function finishLevel() {
     return
   }
   el.curtainTitle.textContent = `рівень ${level().id} зібрано`
-  el.curtainNote.textContent = `далі — сітка більша, ${LEVELS[state.levelIndex + 1].note}`
+  el.curtainNote.textContent = `далі — ${LEVELS[state.levelIndex + 1].note}`
   el.curtain.setAttribute('data-active', '')
 }
 
