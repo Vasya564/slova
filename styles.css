@@ -420,20 +420,21 @@ body::after {
 .roller i[data-back] { left: auto; right: 0; }
 .roller i[data-back]::after { left: auto; right: 100%; transform: scaleX(-1); }
 
-/* Сам валик: їде на передньому краї смуги, бо прив'язаний до її межі */
+/* Валик один на весь перехід: game.js пересаджує його на ту смугу,
+   яку зараз фарбують, і запускає проїзд тієї ж тривалості */
 .roller b {
   position: absolute;
-  left: 100%;
-  top: -7%;
-  height: 114%;
+  left: 6px;
   width: 26px;
-  margin-left: 6px;
   border-radius: 11px;
+  opacity: 0;
   background:
     repeating-linear-gradient(0deg, rgba(90, 60, 78, 0.16) 0 3px, rgba(255, 255, 255, 0) 3px 7px),
-    linear-gradient(90deg, #c6aeb9 0%, #f1e4ea 45%, #cdb4c0 100%);
-  box-shadow: 0 8px 18px rgba(80, 50, 70, 0.22);
+    linear-gradient(90deg, #b9a7cd 0%, #ece4f7 45%, #c1b0d6 100%);
+  box-shadow: 0 8px 18px rgba(70, 55, 100, 0.25);
 }
+
+.roller b[data-run] { opacity: 1; }
 
 /* держак і стійка */
 .roller b::before {
@@ -460,9 +461,19 @@ body::after {
   transform: translateY(-50%) rotate(20deg);
 }
 
-.roller i[data-back] b { left: auto; right: 100%; margin-left: 0; margin-right: 6px; }
-.roller i[data-back] b::before { left: auto; right: 100%; }
-.roller i[data-back] b::after { left: auto; right: calc(100% + 26px); transform: translateY(-50%) rotate(-20deg); }
+.roller b[data-back] { left: auto; right: 6px; }
+.roller b[data-back]::before { left: auto; right: 100%; }
+.roller b[data-back]::after { left: auto; right: calc(100% + 26px); transform: translateY(-50%) rotate(-20deg); }
+
+@keyframes tool-run {
+  from { left: 6px; }
+  to { left: calc(100% + 6px); }
+}
+
+@keyframes tool-back {
+  from { right: 6px; }
+  to { right: calc(100% + 6px); }
+}
 
 @keyframes roll {
   from { width: 0; }

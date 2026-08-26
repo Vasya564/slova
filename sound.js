@@ -27,22 +27,30 @@ function note(frequency, delay, duration, peak, type = 'triangle') {
 
 // Записані звуки: валик і помилка. Кожен вантажимо раз і тримаємо
 // розкодованим; якщо файлу немає — лишається синтез.
-const SAMPLES = { error: 'error.m4a', roller: 'roller.m4a', splat: 'splat.m4a' }
+// Для кожного звуку — список файлів: перший, який знайдеться, той і грає.
+const SAMPLES = {
+  error: ['error.m4a'],
+  roller: ['roller.m4a'],
+  splat: ['splat.m4a', 'splat.mp3', 'splat.wav'],
+}
 
 const decoded = new Map()
 const loading = new Map()
 
 async function load(name) {
-  try {
-    const response = await fetch(SAMPLES[name])
-    if (!response.ok) throw new Error(response.status)
-    const buffer = await audio().decodeAudioData(await response.arrayBuffer())
-    decoded.set(name, buffer)
-    return buffer
-  } catch {
-    decoded.set(name, null)
-    return null
+  for (const file of SAMPLES[name]) {
+    try {
+      const response = await fetch(file)
+      if (!response.ok) continue
+      const buffer = await audio().decodeAudioData(await response.arrayBuffer())
+      decoded.set(name, buffer)
+      return buffer
+    } catch {
+      // не той файл або не той формат — пробуємо наступний
+    }
   }
+  decoded.set(name, null)
+  return null
 }
 
 function sample(name) {
@@ -225,30 +233,39 @@ function splashSynth() {
     const ctx = audio()
     const now = ctx.currentTime
 
-    const source = ctx.createBufferSource()
-    source.buffer = noiseBuffer(ctx)
-    const filter = ctx.createBiquadFilter()
-    filter.type = 'lowpass'
-    filter.frequency.setValueAtTime(3400, now)
-    filter.frequency.exponentialRampToValueAtTime(380, now + 0.22)
-    const wet = ctx.createGain()
-    wet.gain.setValueAtTime(0.0001, now)
-    wet.gain.exponentialRampToValueAtTime(0.2, now + 0.006)
-    wet.gain.exponentialRampToValueAtTime(0.0001, now + 0.3)
-    source.connect(filter).connect(wet).connect(ctx.destination)
-    source.start(now, Math.random())
-    source.stop(now + 0.26)
+    // сам шльопок: широкий шум, що миттю глухне
+    const hit = ctx.createBufferSource()
+    hit.buffer = noiseBuffer(ctx)
+    const hitFilter = ctx.createBiquadFilter()
+    hitFilter.type = 'lowpass'
+    hitFilter.frequency.setValueAtTime(5200, now)
+    hitFilter.frequency.exponentialRampToValueAtTime(300, now + 0.13)
+    hitFilter.Q.value = 1.4
+    const hitGain = ctx.createGain()
+    hitGain.gain.setValueAtTime(0.0001, now)
+    hitGain.gain.exponentialRampToValueAtTime(0.26, now + 0.004)
+    hitGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.17)
+    hit.connect(hitFilter).connect(hitGain).connect(ctx.destination)
+    hit.start(now, Math.random())
+    hit.stop(now + 0.2)
 
-    const thud = ctx.createOscillator()
-    const body = ctx.createGain()
-    thud.frequency.setValueAtTime(210, now)
-    thud.frequency.exponentialRampToValueAtTime(52, now + 0.18)
-    body.gain.setValueAtTime(0.0001, now)
-    body.gain.exponentialRampToValueAtTime(0.16, now + 0.008)
-    body.gain.exponentialRampToValueAtTime(0.0001, now + 0.32)
-    thud.connect(body).connect(ctx.destination)
-    thud.start(now)
-    thud.stop(now + 0.28)
+    // дрібні бризки навздогін
+    for (let i = 0; i < 4; i++) {
+      const drop = ctx.createBufferSource()
+      drop.buffer = noiseBuffer(ctx)
+      const band = ctx.createBiquadFilter()
+      band.type = 'bandpass'
+      band.frequency.value = 900 + Math.random() * 2200
+      band.Q.value = 3
+      const gain = ctx.createGain()
+      const at = now + 0.05 + Math.random() * 0.16
+      gain.gain.setValueAtTime(0.0001, at)
+      gain.gain.exponentialRampToValueAtTime(0.03 + Math.random() * 0.03, at + 0.004)
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.06)
+      drop.connect(band).connect(gain).connect(ctx.destination)
+      drop.start(at, Math.random())
+      drop.stop(at + 0.08)
+    }
   } catch {
     // тиха ляпка
   }

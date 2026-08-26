@@ -21,6 +21,7 @@ const el = {
   levels: document.getElementById('levels'),
   sheet: document.getElementById('sheet'),
   roller: document.getElementById('roller'),
+  tool: document.getElementById('tool'),
   grid: document.getElementById('grid'),
   gridWrap: document.querySelector('.grid-wrap'),
   marks: document.getElementById('marks'),
@@ -509,7 +510,6 @@ function paintBands() {
     band.style.height = `${height + 7}%`
     band.style.animationDelay = `${at}ms`
     band.style.animationDuration = `${duration}ms`
-    band.append(document.createElement('b'))
     if (bands.length % 2) band.dataset.back = ''
 
     bands.push({ node: band, at, duration })
@@ -521,19 +521,35 @@ function paintBands() {
   return bands
 }
 
+// Пересаджуємо єдиний валик на смугу, яку зараз фарбують.
+function runTool(band) {
+  const back = band.node.hasAttribute('data-back')
+  el.tool.style.top = band.node.style.top
+  el.tool.style.height = band.node.style.height
+  el.tool.toggleAttribute('data-back', back)
+  el.tool.style.animation = 'none'
+  void el.tool.offsetWidth
+  el.tool.style.animation = `${back ? 'tool-back' : 'tool-run'} ${band.duration}ms cubic-bezier(0.35, 0.1, 0.4, 1) forwards`
+  el.tool.dataset.run = ''
+}
+
 function rollOver(swap) {
   const bands = paintBands()
   const last = bands[bands.length - 1]
   const cover = last.at + last.duration + 120
 
-  el.roller.replaceChildren(...bands.map((band) => band.node))
+  el.roller.replaceChildren(el.tool, ...bands.map((band) => band.node))
   el.roller.removeAttribute('data-done')
   el.roller.setAttribute('data-active', '')
 
-  // кожен прохід валика озивається окремо
+  // один валик по черзі проходить кожну смугу — і озивається на кожній
   for (const band of bands) {
-    window.setTimeout(() => paintRoll(band.duration / 1000), band.at)
+    window.setTimeout(() => {
+      runTool(band)
+      paintRoll(band.duration / 1000)
+    }, band.at)
   }
+  window.setTimeout(() => el.tool.removeAttribute('data-run'), last.at + last.duration)
 
   window.setTimeout(swap, cover)
   window.setTimeout(() => el.roller.setAttribute('data-done', ''), cover + 60)
