@@ -51,14 +51,24 @@ function sample(name) {
   return loading.get(name)
 }
 
-function playSample(buffer, volume) {
+function playSample(buffer, volume, seconds) {
   const ctx = audio()
   const source = ctx.createBufferSource()
   const gain = ctx.createGain()
   gain.gain.value = volume
   source.buffer = buffer
   source.connect(gain).connect(ctx.destination)
-  source.start()
+
+  if (!seconds) {
+    source.start()
+    return
+  }
+
+  // обрізаємо семпл під довжину проходу і прибираємо хвіст, щоб не клацнуло
+  const now = ctx.currentTime
+  gain.gain.setValueAtTime(volume, now + Math.max(0, seconds - 0.09))
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + seconds)
+  source.start(now, 0, seconds + 0.02)
 }
 
 // Металевий призвук дає частотна модуляція несумірним відношенням:
@@ -164,13 +174,13 @@ export function paintStroke() {
 }
 
 // Валик: записаний проїзд, а якщо файлу немає — широкий низький шурхіт.
-export async function paintRoll() {
+export async function paintRoll(seconds) {
   const buffer = await sample('roller')
   if (buffer) {
-    playSample(buffer, 0.75)
+    playSample(buffer, 0.75, seconds)
     return
   }
-  rollSynth(1)
+  rollSynth(seconds ?? 1)
 }
 
 function rollSynth(seconds) {

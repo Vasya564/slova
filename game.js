@@ -486,9 +486,9 @@ function foundSecret(text, path) {
 
 /* ---------- переходи ---------- */
 
-const ROLL_BAND_MS = 340
-const ROLL_STAGGER = 100
-const ROLL_FADE_MS = 260
+const ROLL_BAND_MS = 520
+const ROLL_BAND_GAP_MS = 90
+const ROLL_FADE_MS = 300
 const CRUMPLE_STEPS = 4
 const CRUMPLE_STEP_MS = 170
 
@@ -498,18 +498,24 @@ const CRUMPLE_STEP_MS = 170
 function paintBands() {
   const bands = []
   let edge = -5
+  let at = 0
 
   while (edge < 100) {
-    const height = 11 + Math.random() * 25
+    const height = 13 + Math.random() * 22
+    const duration = ROLL_BAND_MS + Math.random() * 160
     const band = document.createElement('i')
+
     band.style.top = `${edge}%`
     band.style.height = `${height + 7}%`
-    band.style.setProperty('--band', `hsl(340 60% ${88 + Math.random() * 6}%)`)
-    band.style.animationDelay = `${bands.length * ROLL_STAGGER + Math.random() * 70}ms`
-    band.style.animationDuration = `${ROLL_BAND_MS + Math.random() * 140}ms`
+    band.style.animationDelay = `${at}ms`
+    band.style.animationDuration = `${duration}ms`
+    band.append(document.createElement('b'))
     if (bands.length % 2) band.dataset.back = ''
-    bands.push(band)
+
+    bands.push({ node: band, at, duration })
     edge += height
+    // наступний прохід починається аж коли попередній домальовано
+    at += duration + ROLL_BAND_GAP_MS
   }
 
   return bands
@@ -517,11 +523,17 @@ function paintBands() {
 
 function rollOver(swap) {
   const bands = paintBands()
-  const cover = (bands.length - 1) * ROLL_STAGGER + ROLL_BAND_MS + 210
-  el.roller.replaceChildren(...bands)
+  const last = bands[bands.length - 1]
+  const cover = last.at + last.duration + 120
+
+  el.roller.replaceChildren(...bands.map((band) => band.node))
   el.roller.removeAttribute('data-done')
   el.roller.setAttribute('data-active', '')
-  paintRoll()
+
+  // кожен прохід валика озивається окремо
+  for (const band of bands) {
+    window.setTimeout(() => paintRoll(band.duration / 1000), band.at)
+  }
 
   window.setTimeout(swap, cover)
   window.setTimeout(() => el.roller.setAttribute('data-done', ''), cover + 60)
