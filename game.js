@@ -604,6 +604,8 @@ function makeShards() {
     // ненадовго з'являються дублі
     copy.removeAttribute('id')
     for (const node of copy.querySelectorAll('[id]')) node.removeAttribute('id')
+    // аркуш на цей момент уже схований — копія має бути видима
+    copy.style.visibility = 'visible'
     copy.style.width = `${box.width}px`
     copy.style.height = `${box.height}px`
     copy.style.margin = '0'
