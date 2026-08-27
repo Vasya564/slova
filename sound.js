@@ -271,6 +271,49 @@ function splashSynth() {
   }
 }
 
+// Розрив паперу: шурхіт із дрібними тріщинками, що наростає.
+export function tear() {
+  try {
+    const ctx = audio()
+    const now = ctx.currentTime
+
+    const rip = ctx.createBufferSource()
+    rip.buffer = noiseBuffer(ctx)
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.frequency.setValueAtTime(1400, now)
+    filter.frequency.linearRampToValueAtTime(3200, now + 0.42)
+    filter.Q.value = 0.9
+    const gain = ctx.createGain()
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.06, now + 0.05)
+    gain.gain.exponentialRampToValueAtTime(0.09, now + 0.32)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5)
+    rip.connect(filter).connect(gain).connect(ctx.destination)
+    rip.start(now, Math.random())
+    rip.stop(now + 0.54)
+
+    // окремі волокна, що лопаються
+    for (let i = 0; i < 7; i++) {
+      const snap = ctx.createBufferSource()
+      snap.buffer = noiseBuffer(ctx)
+      const band = ctx.createBiquadFilter()
+      band.type = 'highpass'
+      band.frequency.value = 2200 + Math.random() * 2600
+      const tick = ctx.createGain()
+      const at = now + 0.04 + Math.random() * 0.38
+      tick.gain.setValueAtTime(0.0001, at)
+      tick.gain.exponentialRampToValueAtTime(0.02 + Math.random() * 0.025, at + 0.003)
+      tick.gain.exponentialRampToValueAtTime(0.0001, at + 0.04)
+      snap.connect(band).connect(tick).connect(ctx.destination)
+      snap.start(at, Math.random())
+      snap.stop(at + 0.06)
+    }
+  } catch {
+    // тихий розрив
+  }
+}
+
 // Хрускіт паперу на кожен крок жмакання.
 export function crumple(step) {
   try {

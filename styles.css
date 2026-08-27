@@ -19,6 +19,10 @@
   --m8: #ffc7bc;
   --warn: #cf7a63;
   --paint: #f7d9e4;
+  /* дві половини аркуша, розірваного по рваній лінії */
+  --tear-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' preserveAspectRatio='none'%3E%3Cpath d='M0,0L96.5,0.0L109.7,11.1L98.1,22.2L100.6,33.3L101.0,44.4L108.9,55.6L109.2,66.7L114.7,77.8L91.7,88.9L101.1,100.0L92.1,111.1L113.3,122.2L96.9,133.3L98.7,144.4L90.1,155.6L108.2,166.7L94.9,177.8L117.6,188.9L88.4,200.0L0,200Z' fill='%23000'/%3E%3C/svg%3E");
+  --tear-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' preserveAspectRatio='none'%3E%3Cpath d='M96.5,0.0L200,0L200,200L88.4,200.0L88.4,200.0L117.6,188.9L94.9,177.8L108.2,166.7L90.1,155.6L98.7,144.4L96.9,133.3L113.3,122.2L92.1,111.1L101.1,100.0L91.7,88.9L114.7,77.8L109.2,66.7L108.9,55.6L101.0,44.4L100.6,33.3L98.1,22.2L109.7,11.1L96.5,0.0Z' fill='%23000'/%3E%3C/svg%3E");
+
   /* обриси зім'ятого паперу: спершу пожмаканий аркуш, потім грудка */
   --wad-1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' preserveAspectRatio='none'%3E%3Cpath d='M208.1,100.0L174.3,133.1L164.1,171.2L128.0,186.3L89.1,204.0L53.1,181.2L12.8,163.3L6.9,119.8L-0.9,78.5L18.4,40.7L57.4,26.2L90.1,6.0L131.8,2.3L153.4,40.7L181.5,63.7Z' fill='%23000'/%3E%3C/svg%3E");
   --wad-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' preserveAspectRatio='none'%3E%3Cpath d='M186.5,100.0L196.0,133.0L173.3,157.0L148.8,174.7L119.3,176.2L91.7,200.6L56.3,199.6L31.1,174.8L18.6,144.1L2.6,116.3L-3.2,82.8L19.1,56.2L24.7,18.2L62.4,14.3L92.2,5.4L121.3,16.0L148.2,26.3L176.6,40.4L202.2,64.9Z' fill='%23000'/%3E%3C/svg%3E");
@@ -484,6 +488,39 @@ body::after {
   to { width: 100%; }
 }
 
+/* Половини розірваного аркуша: живуть окремим шаром поверх сторінки,
+   бо мають розлітатись за межі свого місця */
+.shards {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+  display: none;
+}
+
+.shards[data-active] { display: block; }
+
+.shards > div {
+  position: absolute;
+  overflow: hidden;
+  transition: transform 0.62s cubic-bezier(0.3, 0, 0.6, 1), opacity 0.62s ease;
+}
+
+.shards > div[data-half='left'] {
+  -webkit-mask: var(--tear-left) no-repeat center / 100% 100%;
+  mask: var(--tear-left) no-repeat center / 100% 100%;
+}
+
+.shards > div[data-half='right'] {
+  -webkit-mask: var(--tear-right) no-repeat center / 100% 100%;
+  mask: var(--tear-right) no-repeat center / 100% 100%;
+}
+
+/* половини повертаються на місце м'якше, ніж розліталися */
+.shards[data-gather] > div {
+  transition: transform 0.66s cubic-bezier(0.2, 0.75, 0.25, 1), opacity 0.4s ease;
+}
+
 /* Час вийшов — аркуш мнуть двічі: спершу жмакають, потім стискають
    у грудку. Форму дає маска з рваним контуром, а не заокруглення —
    інакше виходило гладеньке коло, а не пожмаканий папір. */
@@ -521,6 +558,39 @@ body::after {
 @keyframes roll {
   from { width: 0; }
   to { width: 100%; }
+}
+
+/* Половини розірваного аркуша: живуть окремим шаром поверх сторінки,
+   бо мають розлітатись за межі свого місця */
+.shards {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+  display: none;
+}
+
+.shards[data-active] { display: block; }
+
+.shards > div {
+  position: absolute;
+  overflow: hidden;
+  transition: transform 0.62s cubic-bezier(0.3, 0, 0.6, 1), opacity 0.62s ease;
+}
+
+.shards > div[data-half='left'] {
+  -webkit-mask: var(--tear-left) no-repeat center / 100% 100%;
+  mask: var(--tear-left) no-repeat center / 100% 100%;
+}
+
+.shards > div[data-half='right'] {
+  -webkit-mask: var(--tear-right) no-repeat center / 100% 100%;
+  mask: var(--tear-right) no-repeat center / 100% 100%;
+}
+
+/* половини повертаються на місце м'якше, ніж розліталися */
+.shards[data-gather] > div {
+  transition: transform 0.66s cubic-bezier(0.2, 0.75, 0.25, 1), opacity 0.4s ease;
 }
 
 /* Час вийшов — аркуш мнуть двічі: спершу гарно зім'яли,

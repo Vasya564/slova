@@ -1,5 +1,5 @@
 import { EMOJI, LEVELS, buildPuzzle, label, levelSeconds, readPath, reverse } from './puzzle.js'
-import { crumple, paintRoll, paintStart, paintStop, paintStroke, play, primeSounds, splash } from './sound.js'
+import { crumple, paintRoll, paintStart, paintStop, paintStroke, play, primeSounds, splash, tear } from './sound.js'
 
 const MARKERS = ['--m1', '--m2', '--m3', '--m4', '--m5', '--m6', '--m7', '--m8']
 const ALL_WORDS = LEVELS.flatMap((level) => level.words)
@@ -21,6 +21,7 @@ const el = {
   levels: document.getElementById('levels'),
   sheet: document.getElementById('sheet'),
   roller: document.getElementById('roller'),
+  shards: document.getElementById('shards'),
   tool: document.getElementById('tool'),
   grid: document.getElementById('grid'),
   gridWrap: document.querySelector('.grid-wrap'),
@@ -576,6 +577,75 @@ function flattenSheet() {
   el.sheet.removeAttribute('data-crumple')
 }
 
+// Дві половини аркуша: копії його ж вмісту, обрізані маскою по лінії
+// розриву. Справжній аркуш на цей час ховається.
+const TEAR_MS = 640
+const GATHER_MS = 700
+const HALVES = [
+  { half: 'left', away: 'translate(-58vw, 9vh) rotate(-13deg)' },
+  { half: 'right', away: 'translate(58vw, 12vh) rotate(11deg)' },
+]
+
+function makeShards() {
+  const box = el.sheet.getBoundingClientRect()
+
+  return HALVES.map(({ half, away }) => {
+    const shard = document.createElement('div')
+    const copy = el.sheet.cloneNode(true)
+
+    // копія не має тягнути за собою чужі id — інакше в документі
+    // ненадовго з'являються дублі
+    copy.removeAttribute('id')
+    for (const node of copy.querySelectorAll('[id]')) node.removeAttribute('id')
+    copy.style.width = `${box.width}px`
+    copy.style.height = `${box.height}px`
+    copy.style.margin = '0'
+
+    shard.dataset.half = half
+    shard.style.left = `${box.left}px`
+    shard.style.top = `${box.top}px`
+    shard.style.width = `${box.width}px`
+    shard.style.height = `${box.height}px`
+    shard.append(copy)
+
+    return { node: shard, away }
+  })
+}
+
+function tearSheet(done) {
+  const shards = makeShards()
+  el.shards.removeAttribute('data-gather')
+  el.shards.replaceChildren(...shards.map((shard) => shard.node))
+  el.shards.setAttribute('data-active', '')
+  el.sheet.style.visibility = 'hidden'
+  tear()
+
+  // спершу половини трохи розходяться, а тоді розлітаються
+  window.setTimeout(() => {
+    for (const shard of shards) shard.node.style.transform = shard.away
+  }, 20)
+  window.setTimeout(done, TEAR_MS)
+}
+
+function gatherSheet(done) {
+  const shards = makeShards()
+  el.shards.setAttribute('data-gather', '')
+  el.shards.replaceChildren(...shards.map((shard) => shard.node))
+  el.shards.setAttribute('data-active', '')
+  el.sheet.style.visibility = 'hidden'
+
+  for (const shard of shards) shard.node.style.transform = shard.away
+  window.setTimeout(() => {
+    for (const shard of shards) shard.node.style.transform = 'none'
+  }, 20)
+  window.setTimeout(() => {
+    el.sheet.style.visibility = ''
+    el.shards.removeAttribute('data-active')
+    el.shards.replaceChildren()
+    done?.()
+  }, GATHER_MS)
+}
+
 /* ---------- час ---------- */
 
 const LOW_TIME_MS = 10_000
@@ -804,7 +874,11 @@ document.addEventListener('keydown', (event) => {
 
 el.next.addEventListener('click', () => {
   el.curtain.removeAttribute('data-active')
-  startLevel(state.levelIndex + 1)
+  // аркуш рветься навпіл, а на новому рівні половини сходяться назад
+  tearSheet(() => {
+    startLevel(state.levelIndex + 1)
+    gatherSheet()
+  })
 })
 
 document.getElementById('start').addEventListener('click', () => {
