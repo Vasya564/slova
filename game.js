@@ -585,18 +585,17 @@ function flattenSheet() {
 // Дві половини аркуша: копії його ж вмісту, обрізані маскою по лінії
 // розриву. Справжній аркуш на цей час ховається.
 const TEAR_MS = 1120
-const GATHER_MS = 560
-// Розліт — повільний і далекий, повернення — коротше й ближче:
-// глядач уже все зрозумів, чекати вдруге нема чого.
+const GATHER_MS = TEAR_MS
+// Складання — дзеркало розриву: та сама відстань і та сама тривалість.
 const HALVES = [
-  { half: 'left', away: 'translate(-58vw, 9vh) rotate(-13deg)', from: 'translate(-26vw, 4vh) rotate(-6deg)' },
-  { half: 'right', away: 'translate(58vw, 12vh) rotate(11deg)', from: 'translate(26vw, 5vh) rotate(5deg)' },
+  { half: 'left', away: 'translate(-58vw, 9vh) rotate(-13deg)' },
+  { half: 'right', away: 'translate(58vw, 12vh) rotate(11deg)' },
 ]
 
 function makeShards() {
   const box = el.sheet.getBoundingClientRect()
 
-  return HALVES.map(({ half, away, from }) => {
+  return HALVES.map(({ half, away }) => {
     const shard = document.createElement('div')
     const copy = el.sheet.cloneNode(true)
 
@@ -617,7 +616,7 @@ function makeShards() {
     shard.style.height = `${box.height}px`
     shard.append(copy)
 
-    return { node: shard, away, from }
+    return { node: shard, away }
   })
 }
 
@@ -647,7 +646,7 @@ function gatherSheet(done) {
   // спершу неквапом їдуть туди, і на повернення часу вже не лишається.
   for (const shard of shards) {
     shard.node.style.transition = 'none'
-    shard.node.style.transform = shard.from
+    shard.node.style.transform = shard.away
   }
   void el.shards.offsetWidth
   for (const shard of shards) {
