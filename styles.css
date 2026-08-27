@@ -503,7 +503,7 @@ body::after {
 .shards > div {
   position: absolute;
   overflow: hidden;
-  transition: transform 0.62s cubic-bezier(0.3, 0, 0.6, 1), opacity 0.62s ease;
+  transition: transform 1.05s cubic-bezier(0.5, 0, 0.72, 1), opacity 1.05s ease;
 }
 
 .shards > div[data-half='left'] {
@@ -518,7 +518,7 @@ body::after {
 
 /* половини повертаються на місце м'якше, ніж розліталися */
 .shards[data-gather] > div {
-  transition: transform 0.66s cubic-bezier(0.2, 0.75, 0.25, 1), opacity 0.4s ease;
+  transition: transform 1.05s cubic-bezier(0.2, 0.72, 0.25, 1), opacity 0.5s ease;
 }
 
 /* Час вийшов — аркуш мнуть двічі: спершу жмакають, потім стискають
@@ -575,7 +575,7 @@ body::after {
 .shards > div {
   position: absolute;
   overflow: hidden;
-  transition: transform 0.62s cubic-bezier(0.3, 0, 0.6, 1), opacity 0.62s ease;
+  transition: transform 1.05s cubic-bezier(0.5, 0, 0.72, 1), opacity 1.05s ease;
 }
 
 .shards > div[data-half='left'] {
@@ -590,7 +590,7 @@ body::after {
 
 /* половини повертаються на місце м'якше, ніж розліталися */
 .shards[data-gather] > div {
-  transition: transform 0.66s cubic-bezier(0.2, 0.75, 0.25, 1), opacity 0.4s ease;
+  transition: transform 1.05s cubic-bezier(0.2, 0.72, 0.25, 1), opacity 0.5s ease;
 }
 
 /* Час вийшов — аркуш мнуть двічі: спершу гарно зім'яли,

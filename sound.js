@@ -281,27 +281,27 @@ export function tear() {
     rip.buffer = noiseBuffer(ctx)
     const filter = ctx.createBiquadFilter()
     filter.type = 'bandpass'
-    filter.frequency.setValueAtTime(1400, now)
-    filter.frequency.linearRampToValueAtTime(3200, now + 0.42)
+    filter.frequency.setValueAtTime(1300, now)
+    filter.frequency.linearRampToValueAtTime(3300, now + 0.78)
     filter.Q.value = 0.9
     const gain = ctx.createGain()
     gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.06, now + 0.05)
-    gain.gain.exponentialRampToValueAtTime(0.09, now + 0.32)
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5)
+    gain.gain.exponentialRampToValueAtTime(0.05, now + 0.08)
+    gain.gain.exponentialRampToValueAtTime(0.085, now + 0.62)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.95)
     rip.connect(filter).connect(gain).connect(ctx.destination)
     rip.start(now, Math.random())
-    rip.stop(now + 0.54)
+    rip.stop(now + 1)
 
     // окремі волокна, що лопаються
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 11; i++) {
       const snap = ctx.createBufferSource()
       snap.buffer = noiseBuffer(ctx)
       const band = ctx.createBiquadFilter()
       band.type = 'highpass'
       band.frequency.value = 2200 + Math.random() * 2600
       const tick = ctx.createGain()
-      const at = now + 0.04 + Math.random() * 0.38
+      const at = now + 0.05 + Math.random() * 0.75
       tick.gain.setValueAtTime(0.0001, at)
       tick.gain.exponentialRampToValueAtTime(0.02 + Math.random() * 0.025, at + 0.003)
       tick.gain.exponentialRampToValueAtTime(0.0001, at + 0.04)

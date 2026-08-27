@@ -579,8 +579,8 @@ function flattenSheet() {
 
 // Дві половини аркуша: копії його ж вмісту, обрізані маскою по лінії
 // розриву. Справжній аркуш на цей час ховається.
-const TEAR_MS = 640
-const GATHER_MS = 700
+const TEAR_MS = 1120
+const GATHER_MS = 1160
 const HALVES = [
   { half: 'left', away: 'translate(-58vw, 9vh) rotate(-13deg)' },
   { half: 'right', away: 'translate(58vw, 12vh) rotate(11deg)' },
