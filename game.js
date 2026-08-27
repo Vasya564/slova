@@ -488,6 +488,7 @@ function foundSecret(text, path) {
 
 /* ---------- переходи ---------- */
 
+const ROLL_BANDS = 3
 const ROLL_BAND_MS = 520
 const ROLL_BAND_GAP_MS = 90
 const ROLL_FADE_MS = 300
@@ -498,17 +499,21 @@ const CRUMPLE_STEP_MS = 420
 // кожної кидаємо наново, а наступна лягає з нахлистом на попередню, щоб
 // екран усе одно був накритий повністю.
 function paintBands() {
+  // Смуг рівно три, але висоти в них щоразу різні: ділимо екран у
+  // випадкових частках, а не порівну.
+  const shares = Array.from({ length: ROLL_BANDS }, () => 0.75 + Math.random() * 0.5)
+  const whole = shares.reduce((sum, share) => sum + share, 0)
   const bands = []
-  let edge = -5
+  let edge = -4
   let at = 0
 
-  while (edge < 100) {
-    const height = 13 + Math.random() * 22
+  for (const share of shares) {
+    const height = (share / whole) * 108
     const duration = ROLL_BAND_MS + Math.random() * 160
     const band = document.createElement('i')
 
     band.style.top = `${edge}%`
-    band.style.height = `${height + 7}%`
+    band.style.height = `${height + 6}%`
     band.style.animationDelay = `${at}ms`
     band.style.animationDuration = `${duration}ms`
     if (bands.length % 2) band.dataset.back = ''
