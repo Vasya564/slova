@@ -641,10 +641,18 @@ function gatherSheet(done) {
   el.shards.setAttribute('data-active', '')
   el.sheet.style.visibility = 'hidden'
 
-  for (const shard of shards) shard.node.style.transform = shard.from
-  window.setTimeout(() => {
-    for (const shard of shards) shard.node.style.transform = 'none'
-  }, 20)
+  // Половини треба поставити збоку миттєво, без переходу — інакше вони
+  // спершу неквапом їдуть туди, і на повернення часу вже не лишається.
+  for (const shard of shards) {
+    shard.node.style.transition = 'none'
+    shard.node.style.transform = shard.from
+  }
+  void el.shards.offsetWidth
+  for (const shard of shards) {
+    shard.node.style.transition = ''
+    shard.node.style.transform = 'none'
+  }
+
   window.setTimeout(() => {
     el.sheet.style.visibility = ''
     el.shards.removeAttribute('data-active')
